@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fracciones con Pizzi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Lexend:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: cuaderno cuadriculado; mapa de 8 estaciones -> estación con "Aprende" (manipulable) y "Practica" (preguntas generadas) + Gran Examen.
+   Un solo tema claro elegido a propósito (papel de cuaderno); todos los colores explícitos. */
+:root{
+  --paper:#F6F9FF; --grid:#DCE6F5; --ink:#1D2A4D; --ink-soft:#56648A;
+  --tomato:#E5483B; --cheese:#FFC83D; --basil:#2FA36B; --sky:#3B7DDD; --card:#FFFFFF; --line:#C9D6EC;
+  --ok-bg:#E3F6EC; --bad-bg:#FDECEA; --hint-bg:#FFF6DA;
+  --display:"Bagel Fat One","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --body:"Lexend","Segoe UI",Roboto,Arial,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:26px 26px;}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:12px 48px}
+button{font-family:inherit;cursor:pointer;color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0;letter-spacing:.3px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:12px;justify-content:space-between;
+  background:var(--paper);border-bottom:2px dashed var(--line);padding:10px 16px}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:22px;color:var(--tomato);background:none;border:0;padding:0}
+.chips{display:flex;gap:8px;align-items:center}
+.chip{display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:600;font-variant-numeric:tabular-nums}
+.chip button{background:none;border:0;font-size:15px;padding:0}
+.star{width:20px;height:20px;flex:none}
+/* hero */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;margin:22px 0 8px}
+.bubble{position:relative;background:var(--card);border:3px solid var(--ink);border-radius:22px;padding:14px 18px;box-shadow:5px 5px 0 var(--cheese)}
+.bubble:before{content:"";position:absolute;left:-16px;top:34px;border:8px solid transparent;border-right:12px solid var(--ink)}
+.bubble h1{font-size:clamp(26px,5vw,40px);color:var(--ink);line-height:1.1}
+.bubble p{margin:6px 0 0;color:var(--ink-soft)}
+.pizzi{width:118px;height:auto;flex:none}
+.pizzi.bounce{animation:bounce .6s ease}
+.pizzi.shake{animation:shake .5s ease}
+@keyframes bounce{0%,100%{transform:translateY(0)}30%{transform:translateY(-18px) rotate(-6deg)}60%{transform:translateY(0) rotate(4deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.eye{animation:blink 4s infinite;transform-origin:center;transform-box:fill-box}
+/* mapa */
+.sectitle{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:26px 0 12px;flex-wrap:wrap}
+.sectitle h2{font-size:26px}
+.sectitle span{color:var(--ink-soft);font-size:15px}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.station{position:relative;text-align:left;background:var(--card);border:3px solid var(--ink);border-radius:18px;padding:14px 14px 12px;
+  display:flex;flex-direction:column;gap:8px;transition:transform .15s ease,box-shadow .15s ease;box-shadow:0 4px 0 var(--ink)}
+.station:hover{transform:translateY(-3px) rotate(-.5deg);box-shadow:0 7px 0 var(--ink)}
+.station:active{transform:translateY(2px);box-shadow:0 2px 0 var(--ink)}
+.station .num{font-family:var(--display);font-size:15px;color:var(--card);background:var(--c,var(--sky));border-radius:999px;width:30px;height:30px;display:grid;place-items:center}
+.station .row{display:flex;align-items:center;justify-content:space-between}
+.station h3{font-size:19px;line-height:1.15}
+.station p{margin:0;color:var(--ink-soft);font-size:14px;line-height:1.35}
+.stars{display:flex;gap:2px}
+.exam-card{margin-top:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--ink);color:var(--card);border-radius:20px;padding:18px 20px}
+.exam-card h3{font-size:24px;color:var(--cheese)}
+.exam-card p{margin:2px 0 0;color:#D5DDF0;font-size:15px}
+.exam-card > div{flex:1;min-width:0}
+.btn{font-weight:700;font-size:17px;border:3px solid var(--ink);border-radius:14px;padding:10px 18px;background:var(--cheese);box-shadow:0 4px 0 var(--ink);transition:transform .1s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.alt{background:var(--card)}
+.btn.go{background:var(--basil);color:#fff}
+.btn.red{background:var(--tomato);color:#fff}
+.btn[disabled]{opacity:.45;cursor:default}
+/* estación */
+.back{background:none;border:0;font-weight:600;color:var(--ink-soft);padding:6px 0;font-size:16px}
+.st-head{display:flex;align-items:center;gap:14px;margin:6px 0 14px;flex-wrap:wrap}
+.st-head h2{font-size:clamp(26px,5vw,36px);color:var(--ink)}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{border:3px solid var(--ink);background:var(--card);border-radius:12px 12px 0 0;padding:8px 18px;font-weight:700;font-size:16px}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--card)}
+.panel{background:var(--card);border:3px solid var(--ink);border-radius:0 18px 18px 18px;padding:18px;min-width:0}
+.rule{background:var(--hint-bg);border:2px dashed var(--cheese);border-radius:14px;padding:12px 14px;margin-bottom:16px}
+.rule b{color:var(--tomato)}
+.lab{display:grid;gap:14px}
+.controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.ctrl{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:600;color:var(--ink-soft)}
+.ctrl input[type=range]{width:170px;accent-color:var(--tomato)}
+select{font-family:inherit;font-size:16px;border:2px solid var(--line);border-radius:10px;padding:6px 8px;background:var(--card);color:var(--ink)}
+.big{font-family:var(--display);font-size:30px;color:var(--ink)}
+.badge{display:inline-block;border-radius:999px;padding:3px 12px;font-weight:700;font-size:14px;background:var(--sky);color:#fff}
+.viz{overflow-x:auto;max-width:100%}
+.viz svg{display:block;max-width:100%;height:auto}
+.note{color:var(--ink-soft);font-size:15px;margin:0}
+.steps{display:grid;gap:8px;margin:0;padding:0;list-style:none;counter-reset:s}
+.steps li{counter-increment:s;display:flex;gap:10px;align-items:flex-start}
+.steps li:before{content:counter(s);flex:none;width:28px;height:28px;border-radius:50%;background:var(--sky);color:#fff;font-weight:700;display:grid;place-items:center;font-size:14px}
+.keyword-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.kw{border:3px solid var(--ink);border-radius:14px;background:var(--paper);padding:12px;text-align:left;min-height:96px;font-size:15px;perspective:600px}
+.kw b{display:block;font-size:17px}
+.kw .ans{display:none;color:var(--basil);font-weight:700;margin-top:6px}
+.kw.open .ans{display:block;animation:pop .3s ease}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.flip{display:inline-flex;gap:10px;align-items:center;font-family:var(--display);font-size:30px}
+.fcard{display:inline-grid;place-items:center;min-width:64px;padding:6px 10px;border:3px solid var(--ink);border-radius:12px;background:var(--paper);transition:transform .6s ease}
+.fcard.flipped{transform:rotateX(360deg);background:var(--hint-bg)}
+/* práctica */
+.progress{display:flex;gap:6px;margin-bottom:14px}
+.progress i{flex:1;height:10px;border-radius:6px;background:var(--grid)}
+.progress i.ok{background:var(--basil)}.progress i.bad{background:var(--tomato)}.progress i.now{background:var(--cheese)}
+.qtext{font-size:20px;font-weight:500;margin:0 0 12px}
+.qtext b{font-weight:700;color:var(--tomato)}
+.qviz{margin:6px 0 14px;display:flex;justify-content:center}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.opt{border:3px solid var(--ink);border-radius:14px;background:var(--paper);padding:12px;font-size:20px;font-weight:600;box-shadow:0 3px 0 var(--ink)}
+.opt:hover{background:var(--hint-bg)}
+.opt.sel-ok{background:var(--ok-bg);border-color:var(--basil)}
+.opt.sel-bad{background:var(--bad-bg);border-color:var(--tomato)}
+.answer-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.frac{display:inline-grid;justify-items:center;gap:4px}
+.frac input,.numin{width:74px;font-family:var(--display);font-size:26px;text-align:center;border:3px solid var(--ink);border-radius:12px;padding:4px;background:var(--paper);color:var(--ink)}
+.frac hr{width:84px;border:0;border-top:4px solid var(--ink);margin:0}
+.whole{width:64px}
+.fb{margin-top:14px;border-radius:14px;padding:12px 14px;display:none}
+.fb.show{display:block;animation:pop .25s ease}
+.fb.ok{background:var(--ok-bg);border:2px solid var(--basil)}
+.fb.bad{background:var(--bad-bg);border:2px solid var(--tomato)}
+.fb.hint{background:var(--hint-bg);border:2px solid var(--cheese)}
+.fb h4{margin:0 0 4px;font-size:18px}
+.fb p{margin:0}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.result{text-align:center;display:grid;gap:12px;justify-items:center;padding:10px}
+.result .bigstars{display:flex;gap:8px}
+.result .bigstars svg{width:60px;height:60px}
+.result h3{font-size:32px}
+.review{text-align:left;width:100%;display:grid;gap:10px}
+.review div{border:2px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--paper)}
+
+.vf{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.05;font-weight:700;margin:0 2px;font-variant-numeric:tabular-nums}
+.vf span:first-child{border-bottom:2px solid currentColor;padding:0 3px}
+.vf span:last-child{padding:0 3px}
+.vmix{display:inline-flex;align-items:center;font-weight:700}
+.xsteps{list-style:none;counter-reset:x;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.xsteps li{counter-increment:x;display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;line-height:1.7}
+.xsteps li:before{content:counter(x);width:26px;height:26px;border-radius:50%;background:var(--sky);color:#fff;font-weight:700;font-size:14px;display:grid;place-items:center;margin-top:2px}
+.xsteps li.pop{animation:pop .3s ease}
+.xsteps mark{background:var(--cheese);color:var(--ink);border-radius:4px;padding:0 4px;font-weight:700}
+.xans{display:inline-flex;align-items:center;gap:4px;background:var(--ok-bg);border:2px solid var(--basil);border-radius:10px;padding:1px 8px;font-weight:700}
+.xviz{margin-top:10px;display:grid;justify-items:center;gap:4px;overflow-x:auto;max-width:100%}
+.xviz svg{max-width:100%;height:auto}
+.fb details summary{cursor:pointer;font-weight:600;color:var(--sky);margin-top:4px}
+.worked{background:var(--paper);border:3px solid var(--ink);border-radius:16px;padding:14px;margin-bottom:16px;min-width:0}
+.wk-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.wk-head h3{font-size:20px}
+.wk-kinds{display:flex;flex-wrap:wrap;gap:6px}
+.chipbtn{border:2px solid var(--ink);background:var(--card);border-radius:999px;padding:4px 12px;font-size:14px;font-weight:600}
+.chipbtn[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.wk-prob{font-size:20px;font-weight:600;margin:12px 0 4px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.labtitle{font-size:20px;margin:6px 0 10px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50;width:100%;height:100%}
+.foot{margin-top:28px;color:var(--ink-soft);font-size:14px;text-align:center}
+@media (max-width:560px){
+  .hero{grid-template-columns:1fr;justify-items:center}
+  .bubble:before{display:none}
+  .pizzi{width:96px}
+  .brand span{display:none}
+  .panel{padding:14px}
+  .qtext{font-size:18px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="brand" id="home-btn" aria-label="Ir al mapa">
+    <svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true"><use href="#pizzi-sym"/></svg><span>Fracciones con Pizzi</span>
+  </button>
+  <div class="chips">
+    <div class="chip" title="Estrellas ganadas"><svg class="star" viewBox="0 0 24 24"><use href="#star-on"/></svg><span id="star-count">0</span> / 24</div>
+    <div class="chip"><button id="sound-btn" aria-pressed="true" aria-label="Sonido">🔊</button></div>
+  </div>
+</header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="star-on" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" fill="#FFC83D" stroke="#1D2A4D" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="star-off" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" fill="#E6ECF7" stroke="#B4C2DD" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="pizzi-sym" viewBox="0 0 100 100">
+      <path d="M50 96 L10 16 Q50 2 90 16 Z" fill="#FFC83D" stroke="#1D2A4D" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M10 16 Q50 2 90 16 L86 26 Q50 12 14 26 Z" fill="#E59A4B" stroke="#1D2A4D" stroke-width="5" stroke-linejoin="round"/>
+      <circle cx="34" cy="44" r="6" fill="#E5483B"/><circle cx="66" cy="42" r="6" fill="#E5483B"/><circle cx="52" cy="74" r="5" fill="#E5483B"/>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="wrap" id="app"></main>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+/* ====== utilidades ====== */
+const $ = (s, el = document) => el.querySelector(s);
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
+const lcm = (a, b) => a * b / gcd(a, b);
+const simp = (n, d) => { const g = gcd(n, d) || 1; return [n / g, d / g]; };
+const fs = (n, d) => `${n}/${d}`;
+const FS = (n, d) => { const [a, b] = simp(n, d); return b === 1 ? `${a}` : `${a}/${b}`; };
+const mixedS = (n, d) => { const [a, b] = simp(n, d); if (b === 1) return `${a}`; if (a < b) return `${a}/${b}`; return a % b ? `${Math.floor(a / b)} ${a % b}/${b}` : `${a / b}`; };
+const full = (n, d) => { const out = [fs(n, d)]; const s = FS(n, d); if (!out.includes(s)) out.push(s); const m = mixedS(n, d); if (!out.includes(m)) out.push(m); return out.join(' = '); };
+const multiples = (n, upTo) => { const r = []; for (let i = n; i <= upTo; i += n) r.push(i); return r.join(', '); };
+function mcOpts(correct, distract) {
+  const set = [String(correct)];
+  for (const d of distract) { const s = String(d); if (!set.includes(s) && set.length < 4) set.push(s); }
+  let k = 1; while (set.length < 4) { const s = String(Number(correct) + k * 3 || correct + "'".repeat(k)); if (!set.includes(s)) set.push(s); k++; }
+  const opts = shuffle(set); return { options: opts, answer: opts.indexOf(String(correct)) };
+}
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('pizzi_' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('pizzi_' + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+/* ====== sonido ====== */
+let soundOn = store.get('sound', true), actx = null;
+function tone(freqs, dur = .12, type = 'triangle') {
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    freqs.forEach((f, i) => {
+      const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + i * dur;
+      o.type = type; o.frequency.value = f; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.18, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur + .02);
+    });
+  } catch (e) {}
+}
+const sfx = { ok: () => tone([660, 880, 1175]), bad: () => tone([300, 220], .16, 'sine'), win: () => tone([523, 659, 784, 1046, 1318], .11), tap: () => tone([520], .05) };
+function setSoundBtn() { const b = $('#sound-btn'); b.textContent = soundOn ? '🔊' : '🔈'; b.setAttribute('aria-pressed', soundOn); }
+$('#sound-btn').onclick = () => { soundOn = !soundOn; store.set('sound', soundOn); setSoundBtn(); sfx.tap(); };
+setSoundBtn();
+
+/* ====== confeti ====== */
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function confetti(n = 140) {
+  if (reduce) return;
+  const c = $('#confetti'), ctx = c.getContext('2d'); c.width = innerWidth; c.height = innerHeight;
+  const cols = ['#E5483B', '#FFC83D', '#2FA36B', '#3B7DDD', '#1D2A4D'];
+  const ps = Array.from({ length: n }, () => ({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * .4, vx: (Math.random() - .5) * 3, vy: 2 + Math.random() * 3, r: 4 + Math.random() * 5, a: Math.random() * 6, va: (Math.random() - .5) * .3, col: pick(cols) }));
+  let t = 0; (function f() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    ps.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .03; p.a += p.va; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.col; ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * .6); ctx.restore(); });
+    if (++t < 200) requestAnimationFrame(f); else ctx.clearRect(0, 0, c.width, c.height);
+  })();
+}
+
+/* ====== dibujos SVG ====== */
+const C = { ink: '#1D2A4D', soft: '#56648A', tomato: '#E5483B', cheese: '#FFC83D', basil: '#2FA36B', sky: '#3B7DDD', paper: '#F6F9FF', line: '#C9D6EC', card: '#FFFFFF' };
+function pizziSVG(cls = 'pizzi', mood = 'happy') {
+  const mouth = mood === 'happy' ? '<path d="M40 54 Q50 64 60 54" fill="none" stroke="#1D2A4D" stroke-width="4" stroke-linecap="round"/>' : '<path d="M42 60 Q50 54 58 60" fill="none" stroke="#1D2A4D" stroke-width="4" stroke-linecap="round"/>';
+  return `<svg class="${cls}" viewBox="0 0 100 110" role="img" aria-label="Pizzi, la porción de pizza">
+    <ellipse cx="50" cy="106" rx="22" ry="4" fill="#C9D6EC"/>
+    <use href="#pizzi-sym" width="100" height="100"/>
+    <g class="eye"><ellipse cx="40" cy="38" rx="5" ry="6.5" fill="#fff" stroke="#1D2A4D" stroke-width="2.5"/><circle cx="41" cy="39" r="2.6" fill="#1D2A4D"/></g>
+    <g class="eye"><ellipse cx="60" cy="38" rx="5" ry="6.5" fill="#fff" stroke="#1D2A4D" stroke-width="2.5"/><circle cx="61" cy="39" r="2.6" fill="#1D2A4D"/></g>
+    ${mouth}</svg>`;
+}
+function starRow(n, total = 3, size = 18) { let s = ''; for (let i = 0; i < total; i++) s += `<svg width="${size}" height="${size}" viewBox="0 0 24 24"><use href="#${i < n ? 'star-on' : 'star-off'}"/></svg>`; return `<span class="stars">${s}</span>`; }
+// barras: n de d, dibuja varias unidades si n>d
+function barSVG(n, d, opt = {}) {
+  const W = opt.w || 320, H = 40, units = Math.max(1, Math.ceil(n / d)), gap = 12, color = opt.color || C.tomato;
+  const totalH = units * H + (units - 1) * gap + 4;
+  let s = `<svg viewBox="-2 -2 ${W + 4} ${totalH + 2}" width="${W}" role="img" aria-label="Barra con ${n} de ${d} partes pintadas">`;
+  let k = 0;
+  for (let u = 0; u < units; u++) for (let i = 0; i < d; i++, k++) {
+    const x = i * W / d, y = u * (H + gap);
+    let fill = C.card; if (k < n) fill = (opt.second && k >= opt.second[0] && k < opt.second[0] + opt.second[1]) ? (opt.color2 || C.cheese) : color;
+    if (opt.cross && k >= opt.cross[0] && k < opt.cross[0] + opt.cross[1]) fill = C.card;
+    s += `<rect x="${x}" y="${y}" width="${W / d}" height="${H}" fill="${fill}" stroke="${C.ink}" stroke-width="2.5" style="transition:fill .35s ${(k * 0.04).toFixed(2)}s"/>`;
+    if (opt.cross && k >= opt.cross[0] && k < opt.cross[0] + opt.cross[1]) s += `<path d="M${x + 6} ${y + 6} L${x + W / d - 6} ${y + H - 6} M${x + W / d - 6} ${y + 6} L${x + 6} ${y + H - 6}" stroke="${C.tomato}" stroke-width="3"/>`;
+  }
+  return s + '</svg>';
+}
+function pieSVG(k, d, size = 150, color = C.tomato) {
+  const r = size / 2 - 4, c = size / 2; let s = `<svg viewBox="0 0 ${size} ${size}" width="${size}" role="img" aria-label="Pizza con ${k} de ${d} porciones pintadas">`;
+  if (d === 1) return s + `<circle cx="${c}" cy="${c}" r="${r}" fill="${k ? color : C.card}" stroke="${C.ink}" stroke-width="3"/></svg>`;
+  for (let i = 0; i < d; i++) {
+    const a0 = -Math.PI / 2 + i * 2 * Math.PI / d, a1 = a0 + 2 * Math.PI / d;
+    const p = `M${c} ${c} L${c + r * Math.cos(a0)} ${c + r * Math.sin(a0)} A${r} ${r} 0 ${d === 2 ? 0 : 0} 1 ${c + r * Math.cos(a1)} ${c + r * Math.sin(a1)} Z`;
+    s += `<path d="${p}" fill="${i < k ? color : C.card}" stroke="${C.ink}" stroke-width="3" stroke-linejoin="round"/>`;
+  }
+  return s + '</svg>';
+}
+function rectSVG(L, W, unit = 'cm', fill = '#FFF2CC') {
+  const sc = 200 / Math.max(L, W), w = L * sc, h = W * sc;
+  return `<svg viewBox="-10 -10 ${w + 80} ${h + 50}" width="${Math.min(300, w + 80)}" role="img" aria-label="Rectángulo de ${L} por ${W} ${unit}">
+    <rect x="0" y="0" width="${w}" height="${h}" fill="${fill}" stroke="${C.ink}" stroke-width="4" rx="2"/>
+    <text x="${w / 2}" y="${h + 28}" text-anchor="middle" font-family="Lexend,sans-serif" font-size="18" font-weight="700" fill="${C.ink}">${L} ${unit}</text>
+    <text x="${w + 10}" y="${h / 2 + 6}" font-family="Lexend,sans-serif" font-size="18" font-weight="700" fill="${C.ink}">${W} ${unit}</text></svg>`;
+}
+function gridShapeSVG(cells, s = 34) {
+  const xs = cells.map(c => c[0]), ys = cells.map(c => c[1]); const W = Math.max(...xs) + 3, H = Math.max(...ys) + 3;
+  let out = `<svg viewBox="-2 -2 ${W * s + 4} ${H * s + 4}" width="${Math.min(320, W * s)}" role="img" aria-label="Figura en cuadrícula">`;
+  for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) out += `<rect x="${x * s}" y="${y * s}" width="${s}" height="${s}" fill="${C.card}" stroke="${C.line}" stroke-width="1"/>`;
+  cells.forEach(([x, y]) => out += `<rect x="${(x + 1) * s}" y="${(y + 1) * s}" width="${s}" height="${s}" fill="#7FB3E0" stroke="${C.ink}" stroke-width="2"/>`);
+  return out + '</svg>';
+}
+function perimCells(cells) { const set = new Set(cells.map(c => c.join(','))); let p = 0; cells.forEach(([x, y]) => [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { if (!set.has(`${x + dx},${y + dy}`)) p++; })); return p; }
+const FRAC = (n, d) => `<b>${n}/${d}</b>`;
+
+/* ====== dibujos extra ====== */
+function dotsSVG(t, r) {
+  const per = Math.min(t, 6), rows = Math.ceil(t / per), s = 44;
+  let o = `<svg viewBox="0 0 ${per * s + 8} ${rows * s + 8}" width="${per * s + 8}" role="img" aria-label="${t} bolitas, ${r} rojas">`;
+  for (let i = 0; i < t; i++) o += `<circle cx="${(i % per) * s + 26}" cy="${Math.floor(i / per) * s + 26}" r="16" fill="${i < r ? C.tomato : C.card}" stroke="${C.ink}" stroke-width="3"/>`;
+  return o + '</svg>';
+}
+const T = (x, y, t, a = 'middle') => `<text x="${x}" y="${y}" text-anchor="${a}" font-family="Lexend,sans-serif" font-size="16" font-weight="700" fill="${C.ink}">${t}</text>`;
+function LSVG(W, H, w, h, u = 'm') {
+  const s = 200 / Math.max(W, H), P = [[0, 0], [W, 0], [W, H - h], [W - w, H - h], [W - w, H], [0, H]].map(([x, y]) => [x * s, (H - y) * s]);
+  return `<svg viewBox="-50 -30 ${W * s + 110} ${H * s + 60}" width="${Math.min(320, W * s + 110)}" role="img" aria-label="Figura en forma de L">
+    <polygon points="${P.map(p => p.join(',')).join(' ')}" fill="#E2F0D9" stroke="${C.ink}" stroke-width="4" stroke-linejoin="round"/>
+    ${T(W * s / 2, H * s + 22, `${W} ${u}`)}${T(-8, H * s / 2, `${H} ${u}`, 'end')}${T((W - w) * s / 2, -10, `${W - w} ${u}`)}
+    ${T(W * s + 8, (H - (H - h) / 2) * s + 5, `${H - h} ${u}`, 'start')}${T((W - w / 2) * s, h * s - 10, `${w} ${u}`)}${T((W - w) * s + 8, h / 2 * s + 5, `${h} ${u}`, 'start')}</svg>`;
+}
+function triSVG(a, b, c) {
+  return `<svg viewBox="-40 -10 300 190" width="260" role="img" aria-label="Triángulo"><polygon points="0,160 220,160 80,10" fill="#FCE4D6" stroke="${C.ink}" stroke-width="4" stroke-linejoin="round"/>
+    ${T(110, 182, `${a} cm`)}${T(162, 82, `${b} cm`, 'start')}${T(30, 82, `${c} cm`, 'end')}</svg>`;
+}
+function polySVG(n, side) {
+  const r = 80, c = 100; const pts = Array.from({ length: n }, (_, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / n; return [c + r * Math.cos(a), c + r * Math.sin(a)]; });
+  const [p0, p1] = [pts[Math.floor(n / 2)], pts[Math.floor(n / 2) - 1 < 0 ? n - 1 : Math.floor(n / 2) - 1]];
+  const mx = (p0[0] + p1[0]) / 2, my = (p0[1] + p1[1]) / 2;
+  return `<svg viewBox="0 0 240 220" width="220" role="img" aria-label="Polígono de ${n} lados"><polygon points="${pts.map(p => p.join(',')).join(' ')}" fill="#DEEAF6" stroke="${C.ink}" stroke-width="4" stroke-linejoin="round"/>${T(mx + (mx - c) * .35, my + (my - c) * .35 + 6, `${side} cm`)}</svg>`;
+}
+function modelSVG(a, b, c, d) {
+  const S = 200; let s = `<svg viewBox="-4 -4 ${S + 8} ${S + 8}" width="${S}" role="img" aria-label="Modelo de área">`;
+  for (let i = 0; i < b; i++) for (let j = 0; j < d; j++) { const A = i < a, B = j < c; s += `<rect x="${i * S / b}" y="${j * S / d}" width="${S / b}" height="${S / d}" fill="${A && B ? C.basil : A ? '#9CC3F0' : B ? '#FFE08A' : C.card}" stroke="${C.ink}" stroke-width="2"/>`; }
+  return s + '</svg>';
+}
+function cubeSVG(sd) {
+  return `<svg viewBox="-10 -10 180 175" width="170" role="img" aria-label="Cubo"><polygon points="0,50 100,50 100,150 0,150" fill="#DEEAF6" stroke="${C.ink}" stroke-width="4"/>
+    <polygon points="0,50 40,10 140,10 100,50" fill="#BDD7EE" stroke="${C.ink}" stroke-width="4"/><polygon points="100,50 140,10 140,110 100,150" fill="#9DC3E6" stroke="${C.ink}" stroke-width="4"/>${T(50, 170, `${sd} cm`)}</svg>`;
+}
+const DEN = { 2: ['medio', 'medios'], 3: ['tercio', 'tercios'], 4: ['cuarto', 'cuartos'], 5: ['quinto', 'quintos'], 6: ['sexto', 'sextos'], 7: ['séptimo', 'séptimos'], 8: ['octavo', 'octavos'], 9: ['noveno', 'novenos'], 10: ['décimo', 'décimos'] };
+const NUMW = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
+const ORD = ['', 'primer', 'segundo', 'tercer', 'cuarto', 'quinto', 'sexto', 'séptimo', 'octavo', 'noveno', 'décimo'];
+const money = n => '$' + n.toLocaleString('es-CO');
+const two = () => { if (Math.random() < .6) return [KID, pick(FAM)]; const a = pick(FAM); let b; do { b = pick(FAM); } while (b === a); return [cap(a), b]; };
+function hetPair(list = HET) { let [d1, d2] = pick(list); if (Math.random() < .5) [d1, d2] = [d2, d1]; return [d1, d2]; }
+
+/* ====== banco de ejercicios por tema ====== */
+const SHAPES = [[[0,0],[1,0],[2,0],[0,1],[0,2]],[[0,0],[1,0],[2,0],[3,0],[1,1],[2,1]],[[0,0],[1,0],[1,1],[2,1],[2,2],[3,2]],[[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[1,2]],[[0,1],[1,0],[1,1],[1,2],[2,1],[3,1]],[[0,0],[1,0],[2,0],[2,1],[2,2],[1,2],[0,2]],[[0,0],[1,0],[0,1],[1,1],[2,1],[3,1]],[[0,0],[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1]],[[1,0],[0,1],[1,1],[2,1],[1,2]],[[0,0],[0,1],[0,2],[1,2],[2,2],[3,2]]];
+const KID = 'María Paz';
+const FAM = ['el primo Martín', 'el primo Jero', 'la prima Salomé', 'la tía Natalia', 'la tía Bibiana', 'el tío Jorge', 'el tío Julián', 'el tío Juan Pablo', 'mamá Laura', 'papá John Fredy'];
+const PRIMOS = ['Martín', 'Jero', 'Salomé'];
+const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+const who = () => Math.random() < .5 ? KID : cap(pick(FAM));
+const NAMES = [KID, ...FAM.map(cap)];
+const HET = [[2, 4], [3, 6], [2, 8], [4, 8], [3, 9], [5, 10], [2, 6], [4, 12], [2, 3], [3, 4], [2, 5], [3, 12], [2, 10], [6, 12]];
+const HET_EASY = HET.filter(p => p[1] % p[0] === 0);
+const MCMP = [[2, 3], [3, 4], [4, 6], [6, 8], [4, 10], [6, 9], [5, 6], [8, 12], [3, 5], [6, 10], [9, 12], [2, 5], [4, 5], [10, 15], [3, 8], [2, 7], [5, 10], [4, 8]];
+const sumHet = (a, d1, b, d2, sign = 1) => { const m = lcm(d1, d2), A = a * m / d1, B = b * m / d2; return { m, A, B, R: A + sign * B }; };
+
+/* ====== explicaciones paso a paso ====== */
+const vf = (n, d) => `<span class="vf"><span>${n}</span><span>${d}</span></span>`;
+function vmix(n, d) { const [a, b] = simp(n, d); if (b === 1) return `${a}`; if (a < b) return vf(a, b); const q = Math.floor(a / b), r = a % b; return `<span class="vmix">${q}&nbsp;${vf(r, b)}</span>`; }
+const ANS = (h, u = '') => `<span class="xans">${h}${u ? ' ' + u : ''}</span>`;
+const X = (steps, viz = '') => `<ol class="xsteps">${steps.filter(Boolean).map(s => `<li><div>${s}</div></li>`).join('')}</ol>${viz ? `<div class="xviz">${viz}</div>` : ''}`;
+const mults = (a, upto) => { const r = []; for (let x = a; x <= upto; x += a) r.push(x); return r; };
+const hl = (list, m) => list.map(x => x === m ? `<mark>${x}</mark>` : x).join(', ');
+const OPW = { '+': '+', '-': '−' };
+const plural = (n, s, p) => n === 1 ? s : p;
+
+// cierre: simplificar y pasar a mixto si hace falta
+function sFinish(n, d, u = '') {
+  const out = [];
+  if (n % d === 0) { out.push(`${vf(n, d)} es lo mismo que ${n} ÷ ${d} = ${n / d}.`); out.push(`Respuesta: ${ANS(n / d, u)}`); return out; }
+  const g = gcd(n, d); let N = n, D = d;
+  if (g > 1) { N = n / g; D = d / g; out.push(`Simplifica: ${n} y ${d} se pueden dividir entre ${g}. ${n} ÷ ${g} = ${N} y ${d} ÷ ${g} = ${D}. Queda ${vf(N, D)}.`); }
+  if (N > D) { const q = Math.floor(N / D), r = N % D; out.push(`Como arriba (${N}) es mayor que abajo (${D}), pásalo a número mixto: ${N} ÷ ${D} = ${q} ${plural(q, 'entero', 'enteros')} y sobran ${r}.`); out.push(`Respuesta: ${ANS(vmix(N, D), u)} (también vale ${vf(N, D)})`); }
+  else out.push(`Respuesta: ${ANS(vf(N, D), u)}`);
+  return out;
+}
+
+/* --- clases de fracciones --- */
+function sToMixed(n, d) {
+  const q = Math.floor(n / d), r = n % d, g = gcd(r, d);
+  return [
+    `La raya de la fracción significa <b>dividir</b>: ${vf(n, d)} es ${n} ÷ ${d}. Piensa: si cada entero tiene ${d} partes, ¿cuántos enteros completos armo con ${n} partes?`,
+    `Busca en la tabla del ${d} el número más cercano a ${n} <b>sin pasarte</b>: ${d} × ${q} = ${q * d} ✔ (${d} × ${q + 1} = ${(q + 1) * d} ya se pasa de ${n}). Salen <b>${q}</b> ${plural(q, 'entero', 'enteros')}.`,
+    `Mira cuánto sobra: ${n} − ${q * d} = <b>${r}</b>. ${plural(r, 'Es 1 parte que no alcanza', `Son ${r} partes que no alcanzan`)} para otro entero.`,
+    `Arma el número mixto: el <b>${q}</b> va grande (los enteros), el <b>${r}</b> va arriba y el <b>${d}</b> se queda abajo.`,
+    `Respuesta: ${ANS(`<span class="vmix">${q}&nbsp;${vf(r, d)}</span>`)}${g > 1 ? ` (que se puede simplificar a ${vmix(n, d)})` : ''}. Comprueba: ${q} × ${d} + ${r} = ${n} ✔`,
+  ];
+}
+const vToMixed = (n, d) => `${barSVG(n, d, { w: 240 })}<p class="note">Cada barra es 1 entero de ${d} partes. Se llenan ${Math.floor(n / d)} ${plural(Math.floor(n / d), 'barra completa', 'barras completas')} y en la última hay ${n % d} ${plural(n % d, 'parte', 'partes')}.</p>`;
+function sToImproper(e, n, d) {
+  return [
+    `Cada entero partido en ${d} es ${vf(d, d)}.`,
+    `${e} ${plural(e, 'entero tiene', 'enteros tienen')} ${e} × ${d} = <b>${e * d}</b> partes.`,
+    `Súmale las ${n} partes de la fracción: ${e * d} + ${n} = <b>${e * d + n}</b>. Ese número va arriba.`,
+    `El denominador no cambia, sigue siendo ${d}.`,
+    `Respuesta: ${ANS(vf(e * d + n, d))}. Truco: <i>entero × denominador + numerador</i>.`,
+  ];
+}
+function sClassify(n, d, t) {
+  const L = ['propia', 'impropia', 'igual a la unidad'];
+  return [
+    `Compara el número de arriba (${n}) con el de abajo (${d}).`,
+    t === 0 ? `${n} es <b>menor</b> que ${d}: la fracción es menos de 1 entero.` : t === 1 ? `${n} es <b>mayor</b> que ${d}: la fracción es más de 1 entero.` : `${n} es <b>igual</b> a ${d}: la fracción es exactamente 1 entero.`,
+    `Respuesta: ${ANS(L[t])}.${t === 1 ? ` Se puede escribir como número mixto: ${vmix(n, d)}.` : ''}`,
+  ];
+}
+function sPartOf(k, n, what, total) {
+  const s = [`Cuenta el total de ${total}: ${n}. Ese número va <b>abajo</b> (denominador).`, `Cuenta ${what}: ${k}. Ese número va <b>arriba</b> (numerador).`, `Respuesta: ${ANS(vf(k, n))}`];
+  if (gcd(k, n) > 1) s.push(`También se puede simplificar a ${vf(...simp(k, n))}.`);
+  return s;
+}
+function sEquiv(a, b, m) {
+  return [
+    `Mira los denominadores: ¿por cuánto multiplico ${b} para llegar a ${b * m}? ${b} × ${m} = ${b * m}.`,
+    `Lo que haces abajo lo haces arriba: ${a} × ${m} = <b>${a * m}</b>.`,
+    `Respuesta: ${ANS(a * m)}. ${vf(a, b)} = ${vf(a * m, b * m)}: son equivalentes porque representan la misma cantidad.`,
+  ];
+}
+function sSimplify(N, D) {
+  const g = gcd(N, D), a = N / g, b = D / g;
+  return [
+    `Busca un número que divida exacto a ${N} y a ${D}. El ${g} sirve: ${N} ÷ ${g} = ${a} y ${D} ÷ ${g} = ${b}.`,
+    `${a} y ${b} ya no se pueden dividir entre el mismo número (fuera del 1), así que está simplificada al máximo.`,
+    `Respuesta: ${ANS(vf(a, b))}.`,
+    `Consejo: si no ves el número de una, divide de a poquitos: primero entre 2, luego entre 3, luego entre 5…`,
+  ];
+}
+
+/* --- MCM --- */
+function sMCM(a, b, u = '') {
+  const m = lcm(a, b), s = [
+    `Escribe los múltiplos de ${a} (la tabla del ${a}): ${hl(mults(a, m), m)}…`,
+    `Escribe los múltiplos de ${b}: ${hl(mults(b, m), m)}…`,
+    `Busca el <b>primer</b> número que aparece en las dos listas: <b>${m}</b>.`];
+  if (m === Math.max(a, b)) s.push(`Fíjate: ${Math.max(a, b)} ya está en la tabla del ${Math.min(a, b)}, por eso el MCM es el mismo ${Math.max(a, b)}.`);
+  else if (m < a * b) s.push(`Ojo: ${a} × ${b} = ${a * b} también está en las dos tablas, pero no es el más <b>pequeño</b>.`);
+  s.push(`MCM(${a}, ${b}) = ${ANS(m, u)}`);
+  return s;
+}
+function sMCM3(a, b, c) {
+  const m = lcm(lcm(a, b), c);
+  return [
+    `Escribe los múltiplos del número más grande, ${c}: ${hl(mults(c, m), m)}…`,
+    `Revisa uno por uno cuál también está en la tabla del ${a} y en la del ${b}.`,
+    `${m} ÷ ${a} = ${m / a} exacto y ${m} ÷ ${b} = ${m / b} exacto. ¡Es el primero que sirve para los tres!`,
+    `MCM(${a}, ${b}, ${c}) = ${ANS(m)}`,
+  ];
+}
+
+/* --- suma y resta --- */
+function sHomo(a, b, d, op = '+', u = '') {
+  const r = op === '+' ? a + b : a - b;
+  return [
+    `Las dos fracciones tienen el mismo denominador (${d}): son piezas del mismo tamaño, solo hay que contarlas.`,
+    `${op === '+' ? 'Suma' : 'Resta'} <b>solo los numeradores</b>: ${a} ${OPW[op]} ${b} = ${r}.`,
+    `El denominador se queda igual: ${vf(r, d)}. ¡Los de abajo nunca se suman ni se restan!`,
+    ...sFinish(r, d, u)];
+}
+function sConv(a, d, m) {
+  const k = m / d;
+  return k === 1 ? `${vf(a, d)} ya tiene denominador ${m}: se queda igual.` : `Convierte ${vf(a, d)}: ¿por cuánto multiplico ${d} para llegar a ${m}? Por ${k}. Lo que haces abajo lo haces arriba: ${a} × ${k} = ${a * k}. Queda ${vf(a * k, m)}.`;
+}
+function sLcmLine(d1, d2) { const m = lcm(d1, d2); return `Busca el MCM de ${d1} y ${d2}. Múltiplos de ${d1}: ${hl(mults(d1, m), m)}… Múltiplos de ${d2}: ${hl(mults(d2, m), m)}… El MCM es <b>${m}</b>: ese será el nuevo denominador.`; }
+function sHet(a, d1, b, d2, op = '+', u = '') {
+  const m = lcm(d1, d2), A = a * m / d1, B = b * m / d2, R = op === '+' ? A + B : A - B;
+  return [
+    `Los denominadores son distintos (${d1} y ${d2}): las piezas son de distinto tamaño y no se pueden ${op === '+' ? 'sumar' : 'restar'} así.`,
+    sLcmLine(d1, d2), sConv(a, d1, m), sConv(b, d2, m),
+    `Ahora son homogéneas: ${vf(A, m)} ${OPW[op]} ${vf(B, m)}. ${op === '+' ? 'Suma' : 'Resta'} los numeradores: ${A} ${OPW[op]} ${B} = ${R}. Queda ${vf(R, m)}.`,
+    ...sFinish(R, m, u)];
+}
+function sWholeMinus(W, a, b) {
+  return [
+    `Escribe el ${W} como fracción con denominador ${b}: cada entero es ${vf(b, b)}, así que ${W} = ${vf(W * b, b)} (${W} × ${b} = ${W * b}).`,
+    `Ahora resta como homogéneas: ${vf(W * b, b)} − ${vf(a, b)} = ${vf(W * b - a, b)} (${W * b} − ${a} = ${W * b - a}).`,
+    ...sFinish(W * b - a, b)];
+}
+
+/* --- multiplicación y división --- */
+function sMult(a, b, c, d, u = '') {
+  return [
+    `Para multiplicar fracciones se va <b>en línea recta</b>: arriba con arriba y abajo con abajo.`,
+    `Arriba: ${a} × ${c} = ${a * c}. Abajo: ${b} × ${d} = ${b * d}. Queda ${vf(a * c, b * d)}.`,
+    ...sFinish(a * c, b * d, u)];
+}
+function sWholeTimes(W, a, b, u = '') {
+  return [
+    `Un número entero se escribe como fracción poniéndole un 1 abajo: ${W} = ${vf(W, 1)}.`,
+    `Multiplica en línea recta: ${vf(W, 1)} × ${vf(a, b)} = ${vf(W * a, b)} (${W} × ${a} = ${W * a} arriba; 1 × ${b} = ${b} abajo).`,
+    ...sFinish(W * a, b, u)];
+}
+function sFracOf(n, d, N, u = '', fmt = x => x) {
+  return [
+    `"${vf(n, d)} de ${fmt(N)}" significa: reparte ${fmt(N)} en ${d} grupos iguales y toma ${n} ${plural(n, 'grupo', 'grupos')}.`,
+    `Divide entre el de abajo: ${fmt(N)} ÷ ${d} = ${fmt(N / d)}. Eso es ${vf(1, d)} de ${fmt(N)}.`,
+    n === 1 ? null : `Multiplica por el de arriba: ${fmt(N / d)} × ${n} = ${fmt(N / d * n)}.`,
+    `Respuesta: ${ANS(fmt(N / d * n), u)}`];
+}
+function sDiv(a, b, c, d, u = '') {
+  return [
+    `Para dividir fracciones hay 3 pasos: <b>deja</b> la primera, <b>cambia</b> ÷ por × y <b>voltea</b> la segunda.`,
+    `Deja ${vf(a, b)}, cambia ÷ por × y voltea ${vf(c, d)} → ${vf(d, c)}. Queda ${vf(a, b)} × ${vf(d, c)}.`,
+    `Multiplica en línea recta: arriba ${a} × ${d} = ${a * d}; abajo ${b} × ${c} = ${b * c}. Queda ${vf(a * d, b * c)}.`,
+    ...sFinish(a * d, b * c, u)];
+}
+function sWholeDivUnit(W, d, u = '') {
+  return [
+    `Pregunta: ¿cuántos pedazos de ${vf(1, d)} caben en ${W} ${plural(W, 'entero', 'enteros')}?`,
+    `Cada entero tiene ${d} pedazos de ${vf(1, d)}.`,
+    `${W} × ${d} = ${W * d}. (Con el truco: ${vf(W, 1)} × ${vf(d, 1)} = ${W * d}.)`,
+    `Respuesta: ${ANS(W * d, u)}`];
+}
+function sHowMany(k, d, u = '') {
+  const [p, q] = simp(k, d);
+  return [
+    `Pregunta: ¿cuántos pedazos de ${vf(1, d)} caben en ${vf(p, q)}?`,
+    q !== d ? `Pasa ${vf(p, q)} a denominador ${d}: ${q} × ${d / q} = ${d} y ${p} × ${d / q} = ${k}. Queda ${vf(k, d)}.` : null,
+    `${vf(k, d)} son ${k} pedazos de ${vf(1, d)}.`,
+    `Con el truco de dividir: ${vf(p, q)} × ${vf(d, 1)} = ${vf(p * d, q)} = ${k}.`,
+    `Respuesta: ${ANS(k, u)}`];
+}
+function sFracDivWhole(a, b, W, u = '') {
+  return [
+    `Repartir entre ${W} es dividir entre ${W}. El ${W} se escribe ${vf(W, 1)} y volteado es ${vf(1, W)}.`,
+    `Deja ${vf(a, b)}, cambia ÷ por × y voltea: ${vf(a, b)} × ${vf(1, W)}.`,
+    `Multiplica en línea recta: arriba ${a} × 1 = ${a}; abajo ${b} × ${W} = ${b * W}. Queda ${vf(a, b * W)}.`,
+    ...sFinish(a, b * W, u)];
+}
+function sWholeDivWhole(W, n) {
+  return [
+    `Repartir ${W} entre ${n} es ${W} ÷ ${n}. La división se escribe como fracción: el que se reparte va arriba y entre cuántos va abajo.`,
+    `${W} ÷ ${n} = ${vf(W, n)}.`, ...sFinish(W, n)];
+}
+
+/* --- área y perímetro --- */
+const sRectA = (L, W, u) => [`El <b>área</b> es lo que cubre la figura. Imagina el rectángulo lleno de cuadritos de 1 ${u}: hay ${W} filas de ${L} cuadritos.`, `Área = largo × ancho = ${L} × ${W} = ${L * W}.`, `Respuesta: ${ANS(L * W, u + '²')}`];
+const sRectP = (L, W, u) => [`El <b>perímetro</b> es el borde: se suman los 4 lados.`, `El rectángulo tiene 2 lados de ${L} ${u} y 2 lados de ${W} ${u}.`, `${L} + ${W} + ${L} + ${W} = ${2 * (L + W)}.`, `Respuesta: ${ANS(2 * (L + W), u)}`];
+const sSqP = (s, u) => [`El cuadrado tiene 4 lados iguales de ${s} ${u}.`, `Perímetro = 4 × ${s} = ${4 * s} (o ${s} + ${s} + ${s} + ${s}).`, `Respuesta: ${ANS(4 * s, u)}`];
+function gridPerimSVG(cells, s = 30) {
+  const xs = cells.map(c => c[0]), ys = cells.map(c => c[1]); const W = Math.max(...xs) + 3, H = Math.max(...ys) + 3, on = new Set(cells.map(c => c.join(',')));
+  let o = `<svg viewBox="-3 -3 ${W * s + 6} ${H * s + 6}" width="${Math.min(280, W * s)}" role="img" aria-label="Figura con el borde marcado">`;
+  for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) o += `<rect x="${x * s}" y="${y * s}" width="${s}" height="${s}" fill="${on.has(`${x - 1},${y - 1}`) ? '#7FB3E0' : C.card}" stroke="${C.line}" stroke-width="1"/>`;
+  cells.forEach(([x, y]) => [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { if (!on.has(`${x + dx},${y + dy}`)) { const X0 = x + 1, Y0 = y + 1, x1 = dx === 1 ? X0 + 1 : X0, y1 = dy === 1 ? Y0 + 1 : Y0, x2 = dx ? x1 : X0 + 1, y2 = dy ? y1 : Y0 + 1; o += `<line x1="${x1 * s}" y1="${y1 * s}" x2="${x2 * s}" y2="${y2 * s}" stroke="${C.tomato}" stroke-width="4" stroke-linecap="round"/>`; } }));
+  return o + '</svg>';
+}
+const sSqA = (s, u) => [`Un cuadrado es un rectángulo con largo y ancho iguales.`, `Área = lado × lado = ${s} × ${s} = ${s * s}.`, `Respuesta: ${ANS(s * s, u + '²')}`];
+
+/* ====== banco de ejercicios por tema ====== */
+const GEN = [
+  /* 1. Clases de fracciones */
+  [
+    () => { const d = pick([4, 6, 8]), k = R(1, d - 1); return { text: `Mamá Laura partió una pizza en ${d} porciones iguales y María Paz se comió las pintadas. ¿Qué fracción de la pizza se comió?`, viz: pieSVG(k, d), type: 'frac', ans: [k, d], hint: 'Abajo va el total de porciones; arriba, las que se comió.', explain: X(sPartOf(k, d, 'las porciones pintadas', 'porciones')) }; },
+    () => { const t = R(6, 12), r = R(1, t - 1); return { text: `La prima Salomé tiene ${t} colombinas y las rojas son de fresa. ¿Qué fracción de las colombinas son de fresa?`, viz: dotsSVG(t, r), type: 'frac', ans: [r, t], hint: 'Abajo va el total de colombinas; arriba, las rojas.', explain: X(sPartOf(r, t, 'las rojas', 'colombinas')) }; },
+    () => { const t = R(0, 2); let n, d; if (t === 0) { d = R(3, 12); n = R(1, d - 1); } else if (t === 1) { d = R(2, 9); n = R(d + 1, 2 * d + 3); } else { d = R(2, 12); n = d; } const labels = ['Propia', 'Impropia', 'Igual a la unidad'], p = pick(['El primo Jero', 'El primo Martín', 'La prima Salomé', 'El tío Julián']); return { text: `${p} escribió la fracción ${FRAC(n, d)} en el tablero. ¿Qué clase de fracción es?`, type: 'mc', options: labels, answer: t, hint: 'Compara el numerador con el denominador.', explain: X(sClassify(n, d, t)) }; },
+    () => { const d = pick([4, 6, 8]), n = d * R(1, 2) + R(1, d - 1); return { text: `Para el cumpleaños de María Paz, el tío Jorge trajo <b>${n} porciones</b> de pizza. Cada pizza tiene ${d} porciones. ¿Cuántas pizzas son? Escríbelo como número mixto.`, viz: barSVG(n, d, { w: 260 }), type: 'mixed', ans: [n, d], hint: `Divide ${n} entre ${d}: el cociente son las pizzas completas y lo que sobra, las porciones.`, explain: X(sToMixed(n, d)) }; },
+    () => { let d1 = R(2, 8), d2; do { d2 = R(2, 8); } while (d2 === d1); return { text: `Martín comió ${FRAC(1, d1)} de una torta y Jero comió ${FRAC(1, d2)} de otra torta igual. ¿Quién comió más?`, type: 'mc', options: ['Martín', 'Jero'], answer: d1 < d2 ? 0 : 1, hint: 'Una torta partida en pocos pedazos tiene pedazos más grandes.', explain: X([`Las dos fracciones tienen 1 arriba: cada uno comió 1 pedazo.`, `Una torta partida en ${Math.min(d1, d2)} tiene pedazos más grandes que una partida en ${Math.max(d1, d2)}.`, `${vf(1, Math.min(d1, d2))} es mayor que ${vf(1, Math.max(d1, d2))}. Comió más ${ANS(d1 < d2 ? 'Martín' : 'Jero')}.`]) }; },
+    () => { const t = R(0, 2); let n, d; if (t === 0) { d = R(3, 12); n = R(1, d - 1); } else if (t === 1) { d = R(2, 9); n = R(d + 1, 2 * d + 3); } else { d = R(2, 12); n = d; }
+      const labels = ['Propia', 'Impropia', 'Igual a la unidad'];
+      return { text: `¿Qué clase de fracción es ${FRAC(n, d)}?`, type: 'mc', options: labels, answer: t, hint: 'Compara el número de arriba (numerador) con el de abajo (denominador).', explain: X(sClassify(n, d, t)) }; },
+    () => { const d = R(3, 10), k = R(1, d - 1); return { text: '¿Qué fracción de la barra está pintada?', viz: barSVG(k, d), type: 'frac', ans: [k, d], hint: 'Abajo va el total de partes; arriba, las partes pintadas.', explain: X(sPartOf(k, d, 'las partes pintadas', 'partes iguales')) }; },
+    () => { const d = pick([4, 6, 8, 3, 5]), k = R(1, d - 1); return { text: '¿Qué fracción de la pizza <b>NO</b> está pintada?', viz: pieSVG(k, d), type: 'frac', ans: [d - k, d], hint: 'Cuenta las porciones blancas y el total de porciones.', explain: X(sPartOf(d - k, d, 'las porciones blancas (sin pintar)', 'porciones')) }; },
+    () => { const d = pick([4, 6, 8, 3]), k = R(1, d - 1); return { text: '¿Qué fracción de la pizza está pintada?', viz: pieSVG(k, d, 150, C.basil), type: 'frac', ans: [k, d], hint: 'Cuenta las porciones pintadas y el total.', explain: X(sPartOf(k, d, 'las porciones pintadas', 'porciones')) }; },
+    () => { const d = R(2, 6), n = d * R(1, 3) + R(1, d - 1); return { text: `Convierte ${FRAC(n, d)} en número mixto.`, type: 'mixed', ans: [n, d], hint: `Divide ${n} entre ${d}. El cociente es el entero y lo que sobra va arriba.`, explain: X(sToMixed(n, d), vToMixed(n, d)) }; },
+    () => { const e = R(1, 4), d = R(2, 6), n = R(1, d - 1); return { text: `Convierte el número mixto <b>${e} ${n}/${d}</b> en fracción impropia.`, type: 'frac', ans: [e * d + n, d], exact: true, hint: `Multiplica el entero por el denominador y súmale el numerador: ${e} × ${d} + ${n}.`, explain: X(sToImproper(e, n, d), barSVG(e * d + n, d, { w: 240 })) }; },
+    () => { const d = pick([3, 4, 5, 6]), n = d * R(1, 2) + R(1, d - 1); return { text: '¿Qué número mixto muestran las barras pintadas? (cada barra es 1 entero)', viz: barSVG(n, d, { w: 260 }), type: 'mixed', ans: [n, d], hint: 'Cuenta las barras completas (enteros) y luego las partes de la última.', explain: X([`Cuenta las barras completamente pintadas: ${Math.floor(n / d)}. Ese es el número entero.`, `En la última barra hay ${n % d} de ${d} partes pintadas: ${vf(n % d, d)}.`, `Respuesta: ${ANS(`<span class="vmix">${Math.floor(n / d)}&nbsp;${vf(n % d, d)}</span>`)} (en total son ${n} partes: ${vf(n, d)})`]) }; },
+    () => { const [a, b] = pick([[1, 2], [1, 3], [2, 3], [3, 4], [2, 5], [1, 4], [3, 5], [4, 5]]), m = R(2, 5); return { text: `Completa la fracción equivalente: ${FRAC(a, b)} = <b>?/${b * m}</b>`, type: 'num', ans: a * m, hint: `¿Por cuánto se multiplicó ${b} para llegar a ${b * m}? Multiplica ${a} por lo mismo.`, explain: X(sEquiv(a, b, m)) }; },
+    () => { const [a, b] = pick([[1, 2], [1, 3], [2, 3], [3, 4], [2, 5], [1, 4], [3, 5], [4, 5], [5, 6], [1, 5]]), m = R(2, 5); return { text: `Simplifica al máximo la fracción ${FRAC(a * m, b * m)}.`, type: 'frac', ans: [a, b], exact: true, hint: `Divide arriba y abajo entre el mismo número (prueba con ${m}).`, explain: X(sSimplify(a * m, b * m)) }; },
+    () => { const d = R(2, 10), n = R(1, Math.min(9, d - 1)); return { text: `Escribe con números: <b>${NUMW[n]} ${n === 1 ? DEN[d][0] : DEN[d][1]}</b>`, type: 'frac', ans: [n, d], exact: true, hint: `"${n === 1 ? DEN[d][0] : DEN[d][1]}" te dice en cuántas partes se divide (denominador).`, explain: X([`La palabra "${n === 1 ? DEN[d][0] : DEN[d][1]}" dice en cuántas partes se divide el entero: ${d}. Va abajo.`, `"${NUMW[n]}" dice cuántas partes se toman: ${n}. Va arriba.`, `Respuesta: ${ANS(vf(n, d))}`]) }; },
+    () => { const t = R(5, 12), r = R(1, t - 1); return { text: '¿Qué fracción de las bolitas son <b>rojas</b>?', viz: dotsSVG(t, r), type: 'frac', ans: [r, t], hint: 'Abajo va el total de bolitas; arriba, las rojas.', explain: X(sPartOf(r, t, 'las rojas', 'bolitas')) }; },
+    () => { const d = R(5, 12); let a = R(1, d - 1), b; do { b = R(1, d - 1); } while (b === a); return { text: `¿Cuál fracción es <b>mayor</b>?`, type: 'mc', options: [fs(a, d), fs(b, d)], answer: a > b ? 0 : 1, hint: 'Tienen el mismo denominador: gana la que tiene más partes.', explain: X([`Las dos tienen denominador ${d}: las piezas son del mismo tamaño.`, `Gana la que tiene más piezas: ${Math.max(a, b)} es mayor que ${Math.min(a, b)}.`, `Respuesta: ${ANS(vf(Math.max(a, b), d))}`]) }; },
+    () => { let d1 = R(2, 8), d2; do { d2 = R(2, 8); } while (d2 === d1); return { text: `¿Cuál fracción es <b>mayor</b>?`, type: 'mc', options: [fs(1, d1), fs(1, d2)], answer: d1 < d2 ? 0 : 1, hint: 'Piensa en una pizza: ¿una porción es más grande si la partes en pocos o en muchos pedazos?', explain: X([`Las dos tienen 1 arriba: es 1 pedazo en cada caso.`, `Si partes una pizza en ${Math.min(d1, d2)}, los pedazos son más grandes que si la partes en ${Math.max(d1, d2)}.`, `Respuesta: ${ANS(vf(1, Math.min(d1, d2)))}`]) }; },
+    () => { const [a, b] = pick([[1, 2], [1, 3], [2, 3], [3, 4], [2, 5], [1, 4]]); const bad = fs(a * 2 + 1, b * 2); const o = mcOpts(bad, [fs(a * 2, b * 2), fs(a * 3, b * 3), fs(a * 4, b * 4)]); return { text: `¿Cuál fracción <b>NO</b> es equivalente a ${FRAC(a, b)}?`, type: 'mc', ...o, hint: `Las equivalentes salen de multiplicar ${a} y ${b} por el mismo número.`, explain: X([`Las equivalentes salen de multiplicar arriba y abajo por el mismo número.`, `× 2: ${vf(a * 2, b * 2)} · × 3: ${vf(a * 3, b * 3)} · × 4: ${vf(a * 4, b * 4)}. Todas son equivalentes.`, `${vf(a * 2 + 1, b * 2)} no sale de multiplicar por el mismo número. Respuesta: ${ANS(vf(a * 2 + 1, b * 2))}`]) }; },
+    () => { const dh = R(5, 9), xs = shuffle([...Array(dh - 1).keys()].map(x => x + 1)).slice(0, 3), homo = xs.map(x => fs(x, dh)).join(', '); const het = () => shuffle([3, 4, 5, 6, 7, 8, 9]).slice(0, 3).map(d => fs(R(1, d - 1), d)).join(', '); const o = mcOpts(homo, [het(), het(), het()]); return { text: '¿En cuál grupo <b>todas</b> las fracciones son homogéneas?', type: 'mc', ...o, hint: 'Homogéneas = mismo denominador.', explain: X([`<b>Homogéneas</b> quiere decir que todas tienen el mismo número abajo.`, `Revisa cada grupo mirando solo los denominadores.`, `En ${ANS(homo)} todas tienen ${dh} abajo.`]) }; },
+  ],
+  /* 2. MCM */
+  [
+    () => { const [a, b] = pick([[2, 3], [3, 4], [4, 6], [2, 5], [3, 5], [4, 5]]); return { text: `María Paz va a natación cada <b>${a} días</b> y su prima Salomé cada <b>${b} días</b>. Hoy fueron juntas. ¿En cuántos días vuelven a ir juntas?`, type: 'num', ans: lcm(a, b), hint: 'Busca el primer número que esté en las dos tablas.', explain: X([`Coinciden en los días que están en las dos tablas: buscamos el MCM.`, ...sMCM(a, b, 'días')]) }; },
+    () => { const [a, b] = pick([[6, 8], [4, 6], [8, 10], [6, 9], [10, 15]]); return { text: `La tía Natalia empaca galletas en bolsas de <b>${a}</b> y la tía Bibiana en bolsas de <b>${b}</b>. Si las dos quieren empacar la misma cantidad de galletas, ¿cuál es la menor cantidad posible?`, type: 'num', ans: lcm(a, b), hint: 'Es el primer múltiplo común: el MCM.', explain: X([`La cantidad tiene que estar en la tabla del ${a} y en la del ${b}, y ser la más pequeña: es el MCM.`, ...sMCM(a, b, 'galletas')]) }; },
+    () => { const [a, b] = pick([[4, 6], [6, 8], [3, 4], [5, 10], [6, 9], [4, 10], [8, 12]]), t1 = pick(['la tía Natalia', 'la tía Bibiana', 'el tío Jorge']), t2 = pick(['el tío Julián', 'el tío Juan Pablo']); return { text: `${cap(t1)} visita a María Paz cada <b>${a} días</b> y ${t2} cada <b>${b} días</b>. Hoy llegaron los dos. ¿En cuántos días vuelven a coincidir?`, type: 'num', ans: lcm(a, b), hint: 'Busca el primer número que esté en las dos tablas.', explain: X([`Vuelven a coincidir el primer día que esté en las dos tablas: el MCM.`, ...sMCM(a, b, 'días')]) }; },
+    () => { const [a, b] = pick(MCMP); return { text: `¿Cuál es el MCM de <b>${a}</b> y <b>${b}</b>?`, type: 'num', ans: lcm(a, b), hint: `Escribe los múltiplos: ${a}, ${2 * a}, ${3 * a}… y ${b}, ${2 * b}, ${3 * b}…`, explain: X(sMCM(a, b)) }; },
+    () => { let a, b; do { [a, b] = pick(MCMP); } while (lcm(a, b) === a * b); const m = lcm(a, b), o = mcOpts(m, [a * b, a + b, Math.max(a, b), m * 2]); return { text: `¿Cuál es el MCM de ${a} y ${b}?`, type: 'mc', ...o, hint: 'Ojo: multiplicar los dos números da un múltiplo común, pero no siempre el MÍNIMO.', explain: X(sMCM(a, b)) }; },
+    () => { const [a, b] = pick([[10, 15], [12, 18], [6, 8], [15, 20], [8, 10], [12, 16], [4, 6], [20, 30]]); return { text: `Un bus sale cada <b>${a} minutos</b> y otro cada <b>${b} minutos</b>. Si salen juntos ahora, ¿en cuántos minutos vuelven a salir juntos?`, type: 'num', ans: lcm(a, b), hint: 'Buscas el primer momento en que coinciden: es el MCM.', explain: X([`Los buses coinciden en los minutos que están en las dos tablas: buscamos el MCM.`, ...sMCM(a, b, 'minutos')]) }; },
+    () => { const [a, b] = pick(MCMP), m = lcm(a, b), c = m * pick([2, 3]); const bad = [a * (b + 1), b * (a + 1), m + 1, m + a, m + b].filter(x => x % a || x % b); const o = mcOpts(c, bad); return { text: `¿Cuál de estos números es múltiplo de ${a} <b>y también</b> de ${b}?`, type: 'mc', ...o, hint: `Prueba cuál se puede dividir exacto entre ${a} y entre ${b}.`, explain: X([`Un múltiplo de ${a} se puede dividir exacto entre ${a} (está en su tabla).`, `Prueba cada opción dividiendo entre ${a} y entre ${b}.`, `${c} ÷ ${a} = ${c / a} exacto y ${c} ÷ ${b} = ${c / b} exacto.`, `Respuesta: ${ANS(c)}`]) }; },
+    () => { const a = R(3, 9), k = R(3, 10); return { text: `¿Cuál es el <b>${ORD[k]}</b> múltiplo de ${a}?`, type: 'num', ans: a * k, hint: `Los múltiplos de ${a} son ${a} × 1, ${a} × 2, ${a} × 3…`, explain: X([`Los múltiplos de ${a} son la tabla del ${a}: ${mults(a, a * k).join(', ')}…`, `El ${ORD[k]} es ${a} × ${k} = ${a * k}.`, `Respuesta: ${ANS(a * k)}`]) }; },
+    () => { const a = R(3, 9), ms = shuffle([2, 3, 4, 5, 6, 7, 8]).slice(0, 3).map(k => a * k), bad = a * R(3, 7) + R(1, a - 1); const o = mcOpts(bad, ms); return { text: `¿Cuál número <b>NO</b> es múltiplo de ${a}?`, type: 'mc', ...o, hint: `Un múltiplo de ${a} se puede dividir exacto entre ${a}.`, explain: X([`Los múltiplos de ${a} están en su tabla: ${mults(a, Math.max(...ms, bad) + a).join(', ')}…`, `${ms.join(', ')} sí están en la tabla.`, `${bad} no está: ${bad} ÷ ${a} da ${Math.floor(bad / a)} y sobran ${bad % a}. Respuesta: ${ANS(bad)}`]) }; },
+    () => { const [a, b, c] = pick([[2, 3, 4], [2, 3, 5], [3, 4, 6], [2, 4, 5], [2, 3, 6], [4, 6, 8], [2, 5, 10], [3, 6, 9]]); return { text: `¿Cuál es el MCM de <b>${a}, ${b} y ${c}</b>?`, type: 'num', ans: lcm(lcm(a, b), c), hint: `Busca el primer número que esté en las tres tablas.`, explain: X(sMCM3(a, b, c)) }; },
+    () => { const [a, b] = pick([[6, 8], [8, 10], [6, 10], [4, 6], [10, 12], [8, 12]]); return { text: `Las salchichas vienen en paquetes de <b>${a}</b> y los panes en paquetes de <b>${b}</b>. ¿Cuál es el menor número de salchichas que puedes comprar para que haya la misma cantidad de panes?`, type: 'num', ans: lcm(a, b), hint: 'Busca el primer número que esté en las dos tablas: el MCM.', explain: X([`El número tiene que estar en la tabla del ${a} (salchichas) y en la del ${b} (panes).`, ...sMCM(a, b)]) }; },
+    () => { const [a, b] = pick(MCMP), m = lcm(a, b), right = Math.random() < .5, said = right ? m : pick([a * b === m ? m * 2 : a * b, m * 2]); const n1 = who(); return { text: `${n1} dice que el MCM de ${a} y ${b} es <b>${said}</b>. ¿Tiene razón?`, type: 'mc', options: ['Sí, tiene razón', 'No, se equivocó'], answer: right ? 0 : 1, hint: 'Calcula tú el MCM y compara.', explain: X([...sMCM(a, b), right ? `${n1} dijo ${said}: ${ANS('sí tiene razón')}.` : `${n1} dijo ${said}, que es un múltiplo común pero no el más pequeño: ${ANS('se equivocó')}.`]) }; },
+    () => { const [a, b] = pick(MCMP); return { text: `Para sumar ${FRAC(1, a)} + ${FRAC(1, b)}, ¿cuál es el denominador común más pequeño que puedes usar?`, type: 'num', ans: lcm(a, b), hint: 'El denominador común más pequeño es el MCM de los denominadores.', explain: X([`El denominador común más pequeño es el MCM de ${a} y ${b}.`, ...sMCM(a, b)]) }; },
+    () => { const [a, b] = pick([[4, 6], [6, 9], [8, 12], [10, 15], [3, 4], [5, 6]]); return { text: `Una luz roja se prende cada <b>${a} segundos</b> y una azul cada <b>${b} segundos</b>. Si se prenden juntas ahora, ¿en cuántos segundos vuelven a prenderse juntas?`, type: 'num', ans: lcm(a, b), hint: 'Es el MCM de los dos tiempos.', explain: X([`Se prenden juntas en los segundos que están en las dos tablas: el MCM.`, ...sMCM(a, b, 'segundos')]) }; },
+    () => { const [a, b] = pick([[4, 6], [6, 8], [3, 5], [4, 5], [6, 9]]), [n1, n2] = two(); return { text: `${n1} da una vuelta a la pista en <b>${a} minutos</b> y ${n2} en <b>${b} minutos</b>. Si salen juntos, ¿en cuántos minutos vuelven a pasar juntos por la salida?`, type: 'num', ans: lcm(a, b), hint: 'Busca el MCM de los dos tiempos.', explain: X([`Pasan juntos por la salida en los minutos que están en las dos tablas: el MCM.`, ...sMCM(a, b, 'minutos')]) }; },
+  ],
+  /* 3. Suma y resta homogéneas */
+  [
+    () => { const d = R(6, 12), a = R(1, d - 2), b = R(1, d - 1 - a); return { text: `María Paz leyó ${FRAC(a, d)} de su libro favorito en la mañana y ${FRAC(b, d)} en la tarde. ¿Qué parte del libro leyó en el día?`, type: 'frac', ans: [a + b, d], hint: 'Mismo denominador: suma los numeradores.', explain: X([`Juntar lo de la mañana y lo de la tarde es <b>sumar</b>.`, ...sHomo(a, b, d, '+')]) }; },
+    () => { const d = R(5, 10), a = R(3, d - 1), b = R(1, a - 1); return { text: `El primo Jero tenía ${FRAC(a, d)} de metro de cuerda y le regaló ${FRAC(b, d)} de metro a Martín. ¿Cuánta cuerda le quedó a Jero?`, type: 'frac', ans: [a - b, d], hint: '"Le quedó" es restar. Solo se restan los numeradores.', explain: X([`"Le quedó" después de regalar es <b>restar</b>.`, ...sHomo(a, b, d, '-', 'de metro')]) }; },
+    () => { const d = pick([8, 10, 12]); const [a, b, c] = [R(1, 3), R(1, 3), R(1, 2)]; return { text: `Papá John Fredy compró una pizza de ${d} porciones. María Paz comió ${FRAC(a, d)}, Martín ${FRAC(b, d)} y Jero ${FRAC(c, d)}. ¿Qué fracción de la pizza se comieron entre los tres?`, viz: pieSVG(a + b + c, d), type: 'frac', ans: [a + b + c, d], hint: 'Mismo denominador: suma los tres numeradores.', explain: X([`"Entre los tres" es <b>sumar</b>. Las tres fracciones tienen denominador ${d}.`, `Suma los numeradores: ${a} + ${b} + ${c} = ${a + b + c}. El denominador se queda en ${d}.`, ...sFinish(a + b + c, d)]) }; },
+    () => { const d = pick([8, 10, 12]); const a = R(2, 4), b = R(1, 3); return { text: `Mamá Laura hizo una torta de ${d} pedazos. Salomé se comió ${FRAC(a, d)} y María Paz ${FRAC(b, d)}. ¿Qué fracción de la torta <b>queda</b>?`, type: 'frac', ans: [d - a - b, d], hint: `La torta completa es ${d}/${d}. Resta lo que se comieron.`, explain: X([`La torta completa es ${vf(d, d)}.`, `Se comieron ${vf(a, d)} + ${vf(b, d)} = ${vf(a + b, d)} (${a} + ${b} = ${a + b}).`, `Lo que queda: ${vf(d, d)} − ${vf(a + b, d)} = ${vf(d - a - b, d)} (${d} − ${a + b} = ${d - a - b}).`, ...sFinish(d - a - b, d)]) }; },
+    () => { const d = R(5, 12), a = R(1, d - 1), b = R(1, d - 1); return { text: `Suma: ${FRAC(a, d)} + ${FRAC(b, d)}`, type: 'frac', ans: [a + b, d], hint: 'Mismo denominador: suma solo los de arriba y deja el de abajo igual.', explain: X(sHomo(a, b, d, '+')) }; },
+    () => { const d = R(5, 12), a = R(2, d - 1), b = R(1, a - 1); return { text: `Resta: ${FRAC(a, d)} − ${FRAC(b, d)}`, type: 'frac', ans: [a - b, d], hint: 'Resta solo los numeradores; el denominador se queda igual.', explain: X(sHomo(a, b, d, '-')) }; },
+    () => { const d = R(6, 10), a = R(1, 3), b = R(1, d - a - 1); return { text: 'Suma lo que muestra la barra: la parte roja más la parte amarilla.', viz: barSVG(a + b, d, { second: [a, b] }), type: 'frac', ans: [a + b, d], hint: 'Cuenta todas las partes pintadas (rojas y amarillas).', explain: X([`La barra tiene ${d} partes. Rojas: ${vf(a, d)}. Amarillas: ${vf(b, d)}.`, ...sHomo(a, b, d, '+')]) }; },
+    () => { const d = R(6, 10), a = R(3, d - 1), b = R(1, a - 1); return { text: `La barra tenía ${FRAC(a, d)} pintado y se borraron las partes tachadas. ¿Qué fracción quedó pintada?`, viz: barSVG(a, d, { cross: [a - b, b] }), type: 'frac', ans: [a - b, d], hint: 'Quita las partes tachadas.', explain: X([`Había ${vf(a, d)} y se borraron ${b} partes: ${vf(b, d)}.`, ...sHomo(a, b, d, '-')]) }; },
+    () => { const d = R(5, 10), a = R(1, d - 2), b = R(1, d - 1 - a), o = mcOpts(fs(a + b, d), [fs(a + b, 2 * d), fs(a * b, d), fs(a + b, d + 1), fs(Math.abs(a - b) || d - 1, d)]); return { text: `¿Cuál es el resultado de ${FRAC(a, d)} + ${FRAC(b, d)}?`, type: 'mc', ...o, hint: '¡Los denominadores nunca se suman!', explain: X([...sHomo(a, b, d, '+').slice(0, 3), `Respuesta: ${ANS(vf(a + b, d))}. La opción ${fs(a + b, 2 * d)} es la trampa de sumar los de abajo.`]) }; },
+    () => { const d = R(6, 12), a = R(3, d - 1), b = R(1, a - 1), o = mcOpts(fs(a - b, d), [fs(a - b, d * 2), fs(a + b, d), fs(a - b, d - 1), fs(a, d - b)]); return { text: `¿Cuál es el resultado de ${FRAC(a, d)} − ${FRAC(b, d)}?`, type: 'mc', ...o, hint: 'Resta solo los de arriba.', explain: X([...sHomo(a, b, d, '-').slice(0, 3), `Respuesta: ${ANS(vf(a - b, d))}`]) }; },
+    () => { const d = R(8, 12), a = R(1, 3), b = R(1, 3), c = R(1, 3); return { text: `Suma las tres: ${FRAC(a, d)} + ${FRAC(b, d)} + ${FRAC(c, d)}`, type: 'frac', ans: [a + b + c, d], hint: 'Igual que con dos: suma los tres numeradores.', explain: X([`Las tres tienen denominador ${d}: suma solo los numeradores.`, `${a} + ${b} + ${c} = ${a + b + c}. Queda ${vf(a + b + c, d)}.`, ...sFinish(a + b + c, d)]) }; },
+    () => { const d = R(6, 12), a = R(1, d - 3), c = R(a + 1, d - 1); return { text: `Completa: ${FRAC(a, d)} + <b>?/${d}</b> = ${FRAC(c, d)}`, type: 'num', ans: c - a, hint: `¿Cuánto le falta a ${a} para llegar a ${c}?`, explain: X([`El denominador es el mismo (${d}), así que solo miramos los numeradores.`, `¿Qué número sumado a ${a} da ${c}? Resta: ${c} − ${a} = ${c - a}.`, `Comprueba: ${a} + ${c - a} = ${c} ✔. Respuesta: ${ANS(c - a)}`]) }; },
+    () => { const d = R(3, 12), a = R(1, d - 1); return { text: `A un entero (${d}/${d}) le quitas ${FRAC(a, d)}. ¿Cuánto queda?`, viz: barSVG(d, d, { cross: [d - a, a], color: C.sky }), type: 'frac', ans: [d - a, d], hint: `Un entero es ${d}/${d}.`, explain: X([`Un entero partido en ${d} es ${vf(d, d)}.`, ...sHomo(d, a, d, '-')]) }; },
+    () => { let d, a, b; do { d = R(3, 8); a = R(1, d - 1); b = R(1, d - 1); } while (a + b <= d || (a + b) % d === 0); return { text: `Suma ${FRAC(a, d)} + ${FRAC(b, d)} y escribe el resultado como <b>número mixto</b>.`, type: 'mixed', ans: [a + b, d], hint: `Primero suma (${a + b}/${d}); luego mira cuántos enteros caben.`, explain: X([`Suma los numeradores: ${a} + ${b} = ${a + b}. Queda ${vf(a + b, d)}.`, `Ahora pásalo a número mixto:`, ...sToMixed(a + b, d).slice(1)]) }; },
+    () => { const d = pick([6, 8, 10, 12]), a = R(1, d / 2), b = R(1, d / 2 - 1), [n1, n2] = two(); return { text: `Una pizza está partida en ${d} porciones. ${n1} comió ${FRAC(a, d)} y ${n2} comió ${FRAC(b, d)}. ¿Qué fracción de la pizza comieron entre los dos?`, viz: pieSVG(a + b, d), type: 'frac', ans: [a + b, d], hint: '"Entre los dos" es sumar.', explain: X([`"Entre los dos" es <b>sumar</b>.`, ...sHomo(a, b, d, '+')]) }; },
+    () => { const d = R(5, 10), a = R(3, d - 1), b = R(1, a - 1); return { text: `Una cinta mide ${FRAC(a, d)} de metro y se corta un pedazo de ${FRAC(b, d)} de metro. ¿Cuánto mide lo que queda?`, type: 'frac', ans: [a - b, d], hint: '"Lo que queda" es restar.', explain: X([`"Lo que queda" es <b>restar</b>.`, ...sHomo(a, b, d, '-', 'de metro')]) }; },
+  ],
+  /* 4. Suma y resta heterogéneas */
+  [
+    () => { const [d1, d2] = hetPair(HET_EASY), a = R(1, d1 - 1), b = R(1, d2 - 1); return { text: `Mamá Laura usó ${FRAC(a, d1)} de kilo de harina para las arepas y ${FRAC(b, d2)} de kilo para un pan. ¿Cuánta harina usó en total?`, type: 'frac', ans: [sumHet(a, d1, b, d2).R, lcm(d1, d2)], hint: `Iguala los denominadores con el MCM de ${d1} y ${d2}.`, explain: X([`"En total" es <b>sumar</b>.`, ...sHet(a, d1, b, d2, '+', 'de kilo')]) }; },
+    () => { let d1, d2, a, b; do { [d1, d2] = hetPair(HET_EASY); a = R(1, d1 - 1); b = R(1, d2 - 1); } while (a * d2 <= b * d1); return { text: `El tío Julián tenía ${FRAC(a, d1)} de galón de pintura y gastó ${FRAC(b, d2)} de galón pintando la casa del perro de María Paz. ¿Cuánta pintura le quedó?`, type: 'frac', ans: [sumHet(a, d1, b, d2, -1).R, lcm(d1, d2)], hint: '"Le quedó" es restar. Primero iguala los denominadores.', explain: X([`"Le quedó" es <b>restar</b>.`, ...sHet(a, d1, b, d2, '-', 'de galón')]) }; },
+    () => { let d1, d2, a, b; do { [d1, d2] = hetPair(HET_EASY); a = R(1, d1 - 1); b = R(1, d2 - 1); } while (a * d2 <= b * d1); return { text: `María Paz caminó ${FRAC(a, d1)} de km y su prima Salomé caminó ${FRAC(b, d2)} de km. ¿Cuánto <b>más</b> caminó María Paz?`, type: 'frac', ans: [sumHet(a, d1, b, d2, -1).R, lcm(d1, d2)], hint: '"¿Cuánto más?" es restar el menor del mayor.', explain: X([`"¿Cuánto más?" es <b>restar</b>: lo de María Paz menos lo de Salomé.`, ...sHet(a, d1, b, d2, '-', 'km')]) }; },
+    () => { const [x, y] = pick([[2, 4], [3, 6], [2, 8], [4, 8]]), b = R(1, y - 1); return { text: `Para el piquete familiar, el tío Juan Pablo llevó ${FRAC(1, x)} de litro de limonada y papá John Fredy llevó ${FRAC(b, y)} de litro. ¿Cuánta limonada llevaron entre los dos?`, type: 'frac', ans: [sumHet(1, x, b, y).R, lcm(x, y)], hint: 'Convierte la primera fracción al denominador de la segunda.', explain: X([`"Entre los dos" es <b>sumar</b>.`, ...sHet(1, x, b, y, '+', 'de litro')]) }; },
+    () => { const [d1, d2] = hetPair(), a = R(1, d1 - 1), b = R(1, d2 - 1), { m, A, B } = sumHet(a, d1, b, d2); return { text: `Suma: ${FRAC(a, d1)} + ${FRAC(b, d2)}`, type: 'frac', ans: [A + B, m], hint: `Primero el MCM de ${d1} y ${d2}. Convierte las dos fracciones a ese denominador.`, explain: X(sHet(a, d1, b, d2, '+')) }; },
+    () => { let d1, d2, a, b; do { [d1, d2] = hetPair(); a = R(1, d1 - 1); b = R(1, d2 - 1); } while (a * d2 <= b * d1); const { m, A, B } = sumHet(a, d1, b, d2); return { text: `Resta: ${FRAC(a, d1)} − ${FRAC(b, d2)}`, type: 'frac', ans: [A - B, m], hint: `Busca el MCM de ${d1} y ${d2} y convierte antes de restar.`, explain: X(sHet(a, d1, b, d2, '-')) }; },
+    () => { const [d1, d2] = pick(HET_EASY), a = R(1, d1 - 1), k = d2 / d1; return { text: `Convierte ${FRAC(a, d1)} a denominador ${d2}: ${a}/${d1} = <b>?/${d2}</b>`, type: 'num', ans: a * k, hint: `${d1} × ${k} = ${d2}. Haz lo mismo arriba.`, explain: X([sConv(a, d1, d2), `Respuesta: ${ANS(a * k)}`]) }; },
+    () => { const [d1, d2] = pick([[2, 4], [3, 6], [4, 8], [2, 8], [5, 10], [2, 6]]), b = R(1, d2 - 1), m = lcm(d1, d2), A = m / d1, o = mcOpts(fs(A + b, m), [fs(1 + b, d1 + d2), fs(1 + b, m), fs(A + b, m + d1), fs(b, d1 * d2)]); return { text: `¿Cuánto es ${FRAC(1, d1)} + ${FRAC(b, d2)}?`, type: 'mc', ...o, hint: 'Una de las opciones es la trampa de sumar arriba con arriba y abajo con abajo.', explain: X([...sHet(1, d1, b, d2, '+').slice(0, 5), `Respuesta: ${ANS(vf(A + b, m))}. La opción ${fs(1 + b, d1 + d2)} es la trampa de sumar los de abajo.`]) }; },
+    () => { const [d1, d2] = hetPair([[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [4, 6], [6, 8]]), a = R(1, d1 - 1), b = R(1, d2 - 1), { m, A, B } = sumHet(a, d1, b, d2); return { text: `Suma: ${FRAC(a, d1)} + ${FRAC(b, d2)}`, type: 'frac', ans: [A + B, m], hint: `MCM(${d1}, ${d2}). Aquí ningún denominador cabe exacto en el otro.`, explain: X(sHet(a, d1, b, d2, '+')) }; },
+    () => { const W = R(1, 3), b = pick([2, 3, 4, 5, 6, 8]), a = R(1, b - 1); return { text: `Resta: <b>${W}</b> − ${FRAC(a, b)}`, type: 'frac', ans: [W * b - a, b], hint: `Escribe ${W} como fracción con denominador ${b}: ${W} = ${W * b}/${b}.`, explain: X(sWholeMinus(W, a, b)) }; },
+    () => { const [x, y, z] = pick([[2, 4, 8], [2, 3, 6], [3, 6, 12], [2, 4, 12], [2, 5, 10]]), m = lcm(lcm(x, y), z), c = R(1, z - 1), S = m / x + m / y + c * m / z; return { text: `Suma: ${FRAC(1, x)} + ${FRAC(1, y)} + ${FRAC(c, z)}`, type: 'frac', ans: [S, m], hint: `El denominador común es ${m}.`, explain: X([`Los denominadores son ${x}, ${y} y ${z}. El MCM de los tres es <b>${m}</b> (${m} está en las tres tablas).`, sConv(1, x, m), sConv(1, y, m), sConv(c, z, m), `Suma los numeradores: ${m / x} + ${m / y} + ${c * m / z} = ${S}. Queda ${vf(S, m)}.`, ...sFinish(S, m)]) }; },
+    () => { let d1, d2; do { [d1, d2] = pick(HET); } while (lcm(d1, d2) === d1 * d2); const m = lcm(d1, d2), o = mcOpts(m, [d1 * d2, d1 + d2, Math.min(d1, d2)]); return { text: `¿Cuál es el denominador común <b>más pequeño</b> para sumar ${FRAC(1, d1)} y ${FRAC(1, d2)}?`, type: 'mc', ...o, hint: 'Es el MCM de los denominadores.', explain: X(sMCM(d1, d2)) }; },
+    () => { let d1, d2, a, b; do { [d1, d2] = hetPair(); a = R(1, d1 - 1); b = R(1, d2 - 1); } while (a * d2 + b * d1 <= d1 * d2 || (a * d2 + b * d1) % (d1 * d2) === 0 || (sumHet(a, d1, b, d2).R % lcm(d1, d2)) === 0); const { m, A, B } = sumHet(a, d1, b, d2); return { text: `Suma ${FRAC(a, d1)} + ${FRAC(b, d2)} y escribe el resultado como <b>número mixto</b>.`, type: 'mixed', ans: [A + B, m], hint: 'Primero convierte y suma; luego saca los enteros.', explain: X(sHet(a, d1, b, d2, '+')) }; },
+    () => { const [d1, d2] = hetPair(HET_EASY), a = R(1, d1 - 1), b = R(1, d2 - 1), { m, A, B } = sumHet(a, d1, b, d2), n = who(); return { text: `${n} caminó ${FRAC(a, d1)} de km hasta el parque y luego ${FRAC(b, d2)} de km hasta la tienda. ¿Cuánto caminó en total?`, type: 'frac', ans: [A + B, m], hint: '"En total" es sumar. Iguala los denominadores.', explain: X([`"En total" es <b>sumar</b>.`, ...sHet(a, d1, b, d2, '+', 'km')]) }; },
+    () => { let d1, d2, a, b; do { [d1, d2] = hetPair(HET_EASY); a = R(1, d1 - 1); b = R(1, d2 - 1); } while (a * d2 <= b * d1); const { m, A, B } = sumHet(a, d1, b, d2); return { text: `Había ${FRAC(a, d1)} de kilo de harina y se usaron ${FRAC(b, d2)} de kilo en una torta. ¿Cuánta harina quedó?`, type: 'frac', ans: [A - B, m], hint: '"Quedó" es restar. Iguala los denominadores.', explain: X([`"Quedó" es <b>restar</b>.`, ...sHet(a, d1, b, d2, '-', 'de kilo')]) }; },
+  ],
+  /* 5. Multiplicación */
+  [
+    () => { const b = pick([2, 3, 4, 5, 6]), a = b === 2 ? 1 : R(1, b - 1), N = b * R(4, 10); return { text: `Papá John Fredy tiene <b>${N}</b> fotos de la familia en su celular y ${FRAC(a, b)} son de María Paz. ¿Cuántas fotos son de María Paz?`, type: 'num', ans: N / b * a, hint: `Divide ${N} entre ${b} y multiplica por ${a}.`, explain: X(sFracOf(a, b, N, 'fotos')) }; },
+    () => { const b = pick([3, 4, 6, 8]), a = R(1, b - 1); return { text: `Cada uno de los tres primos (Martín, Jero y Salomé) se comió ${FRAC(a, b)} de pizza. ¿Cuánta pizza se comieron entre los tres?`, type: 'frac', ans: [3 * a, b], hint: `Multiplica 3 × ${a}/${b}.`, explain: X([`Son 3 primos y cada uno comió lo mismo: es <b>multiplicar</b> 3 × ${vf(a, b)}.`, ...sWholeTimes(3, a, b, 'de pizza')]) }; },
+    () => { const b = pick([2, 3, 4, 5]), a = R(1, b - 1) || 1, W = R(2, 6); return { text: `El tío Jorge trota ${FRAC(a, b)} de km cada día. ¿Cuántos km trota en <b>${W} días</b>?`, type: 'frac', ans: [a * W, b], hint: `Multiplica ${W} × ${a}/${b}.`, explain: X([`Lo mismo cada día durante ${W} días: es <b>multiplicar</b> ${W} × ${vf(a, b)}.`, ...sWholeTimes(W, a, b, 'km')]) }; },
+    () => { const b = pick([2, 4, 5]), a = b > 2 ? R(1, b - 1) : 1, N = b * 5000 * R(1, 4), t = pick(['la tía Natalia', 'la tía Bibiana', 'el tío Jorge', 'el tío Julián', 'el tío Juan Pablo']); return { text: `${cap(t)} le regaló <b>${money(N)}</b> a María Paz por su buen trabajo en el colegio. Ella ahorró ${FRAC(a, b)} del dinero. ¿Cuánto ahorró?`, type: 'num', ans: N / b * a, hint: `Divide ${money(N)} entre ${b} y multiplica por ${a}.`, explain: X(sFracOf(a, b, N, '', money)) }; },
+    () => { const a = R(1, 5), b = R(2, 7), c = R(1, 5), d = R(2, 6); return { text: `Multiplica: ${FRAC(a, b)} × ${FRAC(c, d)}`, type: 'frac', ans: [a * c, b * d], hint: 'En línea recta: arriba por arriba y abajo por abajo.', explain: X(sMult(a, b, c, d)) }; },
+    () => { const d = pick([2, 3, 4, 5, 6]), n = d > 2 ? R(1, d - 1) : 1, N = d * R(3, 9); return { text: `¿Cuánto es ${FRAC(n, d)} de <b>${N}</b>?`, type: 'num', ans: N / d * n, hint: `Divide ${N} entre ${d} y luego multiplica por ${n}.`, explain: X(sFracOf(n, d, N)) }; },
+    () => { const a = R(1, 4), b = R(3, 6), c = R(1, 4), d = R(2, 5), o = mcOpts(fs(a * c, b * d), [fs(a + c, b + d), fs(a * d, b * c), fs(a * c, b + d), fs(a + c, b * d)]); return { text: `¿Cuál es el resultado de ${FRAC(a, b)} × ${FRAC(c, d)}?`, type: 'mc', ...o, hint: 'Multiplica en línea recta.', explain: X([...sMult(a, b, c, d).slice(0, 2), `Respuesta: ${ANS(vf(a * c, b * d))}`]) }; },
+    () => { const W = R(2, 5), b = R(3, 8), a = R(1, b - 1); return { text: `Multiplica: <b>${W}</b> × ${FRAC(a, b)}`, type: 'frac', ans: [W * a, b], hint: `${W} es lo mismo que ${W}/1.`, explain: X(sWholeTimes(W, a, b)) }; },
+    () => { const b = pick([2, 4, 5, 10]), a = b > 2 ? R(1, b - 1) : 1, N = b * 1000 * R(2, 9), n = who(); return { text: `${n} tenía <b>${money(N)}</b> y gastó ${FRAC(a, b)} en un libro. ¿Cuánto costó el libro?`, type: 'num', ans: N / b * a, hint: `Divide ${money(N)} entre ${b} y multiplica por ${a}.`, explain: X(sFracOf(a, b, N, '', money)) }; },
+    () => { const [a, b] = pick([[1, 2], [2, 3], [1, 3], [3, 4], [2, 5]]), [c, d] = pick([[1, 2], [3, 4], [1, 3], [2, 3], [1, 4]]); return { text: 'El cuadro verde muestra el resultado de una multiplicación de fracciones. ¿Qué fracción del cuadro es verde?', viz: modelSVG(a, b, c, d), type: 'frac', ans: [a * c, b * d], hint: 'Cuenta todas las partes del cuadro (denominador) y las verdes (numerador).', explain: X([`Cuenta todas las casillas del cuadro: ${b} columnas × ${d} filas = ${b * d}. Va abajo.`, `Cuenta las verdes: ${a} × ${c} = ${a * c}. Va arriba.`, `Es lo mismo que ${vf(a, b)} × ${vf(c, d)} = ${vf(a * c, b * d)}.`, ...sFinish(a * c, b * d)]) }; },
+    () => { const b = R(3, 9), a = R(1, b - 1), k = pick([2, 3]); return { text: `¿Cuál es el <b>${k === 2 ? 'doble' : 'triple'}</b> de ${FRAC(a, b)}?`, type: 'frac', ans: [a * k, b], hint: `${k === 2 ? 'Doble' : 'Triple'} es multiplicar por ${k}.`, explain: X([`El ${k === 2 ? 'doble' : 'triple'} es multiplicar por ${k}.`, ...sWholeTimes(k, a, b)]) }; },
+    () => { const b = pick([2, 3, 4, 5]), a = R(1, b - 1) || 1, W = R(2, 6); return { text: `Cada botella tiene ${FRAC(a, b)} de litro de agua. ¿Cuánta agua hay en <b>${W}</b> botellas?`, type: 'frac', ans: [a * W, b], hint: `Multiplica ${W} × ${a}/${b}.`, explain: X([`${W} botellas iguales: es <b>multiplicar</b> ${W} × ${vf(a, b)}.`, ...sWholeTimes(W, a, b, 'litros')]) }; },
+    () => { const b = pick([2, 3, 4, 5, 6, 10, 12]), a = b === 2 ? 1 : R(1, b - 1); return { text: `¿Cuántos minutos son ${FRAC(a, b)} de hora? (1 hora = 60 minutos)`, type: 'num', ans: 60 / b * a, hint: `Calcula ${a}/${b} de 60.`, explain: X([`1 hora tiene 60 minutos, así que buscamos ${vf(a, b)} de 60.`, ...sFracOf(a, b, 60, 'minutos')]) }; },
+  ],
+  /* 6. División */
+  [
+    () => { const d = pick([4, 6, 8]), k = R(2, d - 1); return { text: `Mamá Laura tiene ${FRAC(...simp(k, d))} de litro de jugo y sirve vasitos de ${FRAC(1, d)} de litro. ¿Cuántos vasitos sirve?`, viz: barSVG(k, d, { color: C.cheese }), type: 'num', ans: k, hint: '"¿Cuántos vasitos?" es una división.', explain: X([`"¿Cuántos vasitos caben?" es <b>dividir</b>.`, ...sHowMany(k, d, 'vasitos')]) }; },
+    () => { const W = pick([1, 2, 3, 5]); return { text: `Papá John Fredy reparte <b>${W} ${W === 1 ? 'torta' : 'tortas'}</b> en partes iguales entre María Paz, Martín, Jero y Salomé. ¿Qué fracción de torta le toca a cada uno?`, type: 'frac', ans: [W, 4], hint: `Son 4 niños: divide ${W} ÷ 4.`, explain: X([`Son 4 niños: María Paz, Martín, Jero y Salomé.`, ...sWholeDivWhole(W, 4)]) }; },
+    () => { const b = pick([2, 3, 4]), a = R(1, b - 1) || 1, W = pick([2, 3, 4]); return { text: `La tía Bibiana tiene ${FRAC(a, b)} de kilo de dulces y los reparte en partes iguales entre <b>${W} sobrinos</b>. ¿Qué fracción de kilo recibe cada sobrino?`, type: 'frac', ans: [a, b * W], hint: `Divide ${a}/${b} ÷ ${W}: voltea el ${W} y multiplica.`, explain: X(sFracDivWhole(a, b, W, 'de kilo')) }; },
+    () => { const W = R(1, 3), d = pick([4, 8]); return { text: `El tío Juan Pablo trajo <b>${W} ${W === 1 ? 'pizza' : 'pizzas'}</b> y María Paz las reparte en porciones de ${FRAC(1, d)} de pizza. ¿Cuántas porciones salen?`, viz: pieSVG(d, d), type: 'num', ans: W * d, hint: `Cada pizza da ${d} porciones.`, explain: X(sWholeDivUnit(W, d, 'porciones')) }; },
+    () => { const W = pick([1, 2, 3, 5]); return { text: `María Paz reparte <b>${W} ${W === 1 ? 'chocolatina' : 'chocolatinas'}</b> en partes iguales entre sus primos Martín, Jero y Salomé. ¿Qué fracción de chocolatina le toca a cada uno?`, type: 'frac', ans: [W, 3], hint: `Divide ${W} entre 3 primos: ${W} ÷ 3.`, explain: X(sWholeDivWhole(W, 3)) }; },
+    () => { const a = R(1, 5), b = R(2, 6), c = R(1, 4), d = R(2, 6); return { text: `Divide: ${FRAC(a, b)} ÷ ${FRAC(c, d)}`, type: 'frac', ans: [a * d, b * c], hint: `Deja ${a}/${b}, cambia ÷ por × y voltea ${c}/${d} → ${d}/${c}.`, explain: X(sDiv(a, b, c, d)) }; },
+    () => { const d = pick([4, 6, 8]), k = R(2, d - 1); return { text: `Tienes ${FRAC(...simp(k, d))} de kilo de arroz y lo repartes en bolsitas de ${FRAC(1, d)} de kilo. ¿Cuántas bolsitas llenas?`, viz: barSVG(k, d, { color: C.cheese }), type: 'num', ans: k, hint: `Divide: ${FS(k, d)} ÷ 1/${d}. Mira cuántos pedacitos de 1/${d} caben.`, explain: X(sHowMany(k, d, 'bolsitas')) }; },
+    () => { const a = R(1, 4), b = R(2, 5), c = R(1, 3), d = R(2, 6), o = mcOpts(fs(a * d, b * c), [fs(a * c, b * d), fs(b * c, a * d), fs(a + d, b + c), fs(a, b * c)]); return { text: `¿Cuál es el resultado de ${FRAC(a, b)} ÷ ${FRAC(c, d)}?`, type: 'mc', ...o, hint: 'Voltea la segunda fracción y multiplica.', explain: X([...sDiv(a, b, c, d).slice(0, 3), `Respuesta: ${ANS(vf(a * d, b * c))}`]) }; },
+    () => ({ text: 'Para dividir dos fracciones, ¿qué se hace?', type: 'mc', ...mcOpts('Se voltea la segunda y se multiplica', ['Se dividen los de arriba y los de abajo', 'Se voltean las dos fracciones', 'Se suman los denominadores']), hint: 'Piensa en la tarjeta que se voltea.', explain: X([`<b>Deja</b> la primera fracción como está.`, `<b>Cambia</b> el ÷ por ×.`, `<b>Voltea</b> la segunda: el de arriba pasa abajo y el de abajo pasa arriba.`, `Multiplica en línea recta. Ejemplo: ${vf(3, 4)} ÷ ${vf(1, 2)} = ${vf(3, 4)} × ${vf(2, 1)} = ${vf(6, 4)} = ${vmix(6, 4)}.`, `Respuesta: ${ANS('Se voltea la segunda y se multiplica')}`]) }),
+    () => { const W = R(2, 6), d = pick([2, 3, 4, 5]); return { text: `Divide: <b>${W}</b> ÷ ${FRAC(1, d)}`, type: 'num', ans: W * d, hint: `¿Cuántos pedazos de 1/${d} caben en ${W} enteros? Cada entero tiene ${d}.`, explain: X(sWholeDivUnit(W, d)) }; },
+    () => { const b = R(2, 6), a = R(1, b), W = R(2, 4); return { text: `Divide: ${FRAC(a, b)} ÷ <b>${W}</b>`, type: 'frac', ans: [a, b * W], hint: `${W} es ${W}/1. Voltéalo: 1/${W}.`, explain: X(sFracDivWhole(a, b, W)) }; },
+    () => { let a = R(1, 8), b; do { b = R(2, 9); } while (a === b); return { text: `¿Cuál es la fracción <b>inversa</b> (volteada) de ${FRAC(a, b)}?`, type: 'frac', ans: [b, a], exact: true, hint: 'El numerador pasa abajo y el denominador pasa arriba.', explain: X([`Voltear una fracción es cambiar de lugar sus números.`, `El ${a} (arriba) pasa abajo y el ${b} (abajo) pasa arriba.`, `Respuesta: ${ANS(vf(b, a))}`]) }; },
+    () => { const W = R(2, 4), d = pick([4, 6, 8]); return { text: `Hay <b>${W} pizzas</b> y cada niño come ${FRAC(1, d)} de pizza. ¿Para cuántos niños alcanza?`, viz: pieSVG(d, d), type: 'num', ans: W * d, hint: `Cada pizza alcanza para ${d} niños.`, explain: X(sWholeDivUnit(W, d, 'niños')) }; },
+    () => { const b = pick([2, 3, 4]), a = R(1, b - 1) || 1, W = R(2, 4); return { text: `Se reparten ${FRAC(a, b)} de una torta en partes iguales entre <b>${W} amigos</b>. ¿Qué fracción de la torta le toca a cada uno?`, type: 'frac', ans: [a, b * W], hint: `Divide ${a}/${b} ÷ ${W}.`, explain: X(sFracDivWhole(a, b, W, 'de torta')) }; },
+    () => { const W = R(2, 5), d = R(2, 6), o = mcOpts(String(W * d), [fs(W, d), fs(1, W * d), String(W + d)]); return { text: `¿Cuánto es ${W} ÷ ${FRAC(1, d)}?`, type: 'mc', ...o, hint: 'Dividir entre 1/' + d + ' es lo mismo que multiplicar por ' + d + '.', explain: X(sWholeDivUnit(W, d)) }; },
+  ],
+  /* 7. Problemas */
+  [
+    () => { const b = pick([3, 4, 5, 6]), a = R(1, b - 1), N = b * R(4, 6); return { text: `Al cumpleaños de María Paz llegaron <b>${N}</b> invitados y ${FRAC(a, b)} eran de la familia. ¿Cuántos invitados <b>no</b> eran de la familia?`, type: 'num', ans: N - N / b * a, hint: 'Calcula cuántos eran de la familia y réstalo del total.', explain: X([`Primero halla cuántos eran de la familia: ${vf(a, b)} de ${N}.`, `${N} ÷ ${b} = ${N / b}; ${N / b} × ${a} = ${N / b * a} de la familia.`, `Luego resta del total: ${N} − ${N / b * a} = ${N - N / b * a}.`, `Respuesta: ${ANS(N - N / b * a, 'invitados')}`]) }; },
+    () => { const [a, b] = pick([[1, 2], [1, 4], [3, 4], [1, 3], [2, 3]]); return { text: `La tía Natalia tenía una torta entera. Le dio ${FRAC(a, b)} al tío Juan Pablo. ¿Qué fracción de la torta le quedó?`, viz: pieSVG(b - a, b), type: 'frac', ans: [b - a, b], hint: `La torta entera es ${b}/${b}.`, explain: X([`"Le quedó" es <b>restar</b>. La torta entera es ${vf(b, b)}.`, ...sHomo(b, a, b, '-')]) }; },
+    () => { const d = pick([4, 6, 8]); const a = R(1, d / 2), b = R(1, d / 2 - 1), N = R(2, 5) * d; return { text: `En la reunión familiar había <b>${N}</b> empanadas. La tía Bibiana sirvió ${FRAC(a, d)} en el almuerzo y el tío Jorge ${FRAC(b, d)} en la tarde. ¿Cuántas empanadas sirvieron en total?`, type: 'num', ans: N / d * (a + b), hint: `Calcula ${a}/${d} de ${N} y ${b}/${d} de ${N}, y súmalos.`, explain: X([`Halla cuántas son ${vf(a, d)} de ${N}: ${N} ÷ ${d} = ${N / d}; × ${a} = ${N / d * a}.`, `Halla cuántas son ${vf(b, d)} de ${N}: ${N / d} × ${b} = ${N / d * b}.`, `"En total" es sumar: ${N / d * a} + ${N / d * b} = ${N / d * (a + b)}.`, `Respuesta: ${ANS(N / d * (a + b), 'empanadas')}`]) }; },
+    () => { const [d1, d2] = hetPair(HET_EASY), a = R(1, d1 - 1), b = R(1, d2 - 1), { m, A, B } = sumHet(a, d1, b, d2); return { text: `María Paz y papá John Fredy salieron en bicicleta. Recorrieron ${FRAC(a, d1)} de km hasta el parque y ${FRAC(b, d2)} de km hasta la heladería. ¿Cuánto recorrieron en total?`, type: 'frac', ans: [A + B, m], hint: '"En total" es sumar. Iguala los denominadores.', explain: X([`"En total" es <b>sumar</b>.`, ...sHet(a, d1, b, d2, '+', 'km')]) }; },
+    () => { let d1, d2, a, b; do { [d1, d2] = pick([[3, 6], [4, 8], [2, 8], [3, 9], [2, 6], [5, 10]]); a = R(1, d1 - 1); b = R(1, d2 - 1); } while (a * d2 + b * d1 >= d1 * d2); const { m, A, B } = sumHet(a, d1, b, d2), S = A + B, nm = who(); return { text: `${nm} leyó ${FRAC(a, d1)} de un libro el sábado y ${FRAC(b, d2)} el domingo. ¿Qué parte del libro <b>le falta</b> por leer?`, type: 'frac', ans: [m - S, m], hint: 'Primero suma lo que leyó. Después réstalo del libro completo (1 entero).', explain: X([`Son dos pasos: primero <b>sumar</b> lo que leyó y luego <b>restar</b> del libro completo.`, sLcmLine(d1, d2), sConv(a, d1, m), sConv(b, d2, m), `Leyó: ${vf(A, m)} + ${vf(B, m)} = ${vf(S, m)}.`, `El libro completo es ${vf(m, m)}. Le falta: ${vf(m, m)} − ${vf(S, m)} = ${vf(m - S, m)}.`, ...sFinish(m - S, m)]) }; },
+    () => { let d1, d2, a, b; do { [d1, d2] = pick([[4, 8], [2, 4], [3, 6], [2, 8], [5, 10]]); a = R(1, d1 - 1); b = R(1, d2 - 1); } while (b * d1 >= a * d2); const { m, A, B } = sumHet(a, d1, b, d2); return { text: `Una jarra tenía ${FRAC(a, d1)} de litro de jugo y se sirvieron ${FRAC(b, d2)} de litro. ¿Cuánto jugo quedó?`, type: 'frac', ans: [A - B, m], hint: '"Quedó" significa restar.', explain: X([`"Quedó" es <b>restar</b>.`, ...sHet(a, d1, b, d2, '-', 'de litro')]) }; },
+    () => { const d = pick([3, 4, 5, 6]), n = R(1, d - 1), N = d * R(4, 7); return { text: `En el salón hay <b>${N}</b> estudiantes y ${FRAC(n, d)} juegan fútbol. ¿Cuántos estudiantes juegan fútbol?`, type: 'num', ans: N / d * n, hint: `"${n}/${d} de ${N}": divide ${N} entre ${d} y multiplica por ${n}.`, explain: X([`"${vf(n, d)} de ${N}" es una <b>fracción de una cantidad</b> (multiplicación).`, ...sFracOf(n, d, N, 'estudiantes')]) }; },
+    () => { const d = pick([3, 4, 5, 6]), n = R(1, d - 1), N = d * R(4, 7); return { text: `En el salón hay <b>${N}</b> estudiantes y ${FRAC(n, d)} llegaron en bus. ¿Cuántos <b>NO</b> llegaron en bus?`, type: 'num', ans: N - N / d * n, hint: 'Primero calcula cuántos llegaron en bus y réstalo del total.', explain: X([`Primero halla cuántos llegaron en bus: ${N} ÷ ${d} = ${N / d}; × ${n} = ${N / d * n}.`, `Luego resta del total: ${N} − ${N / d * n} = ${N - N / d * n}.`, `Respuesta: ${ANS(N - N / d * n, 'estudiantes')}`]) }; },
+    () => { const [a, b] = pick([[3, 4], [2, 3], [1, 2], [5, 6], [3, 5]]); return { text: `Una receta de galletas lleva ${FRAC(a, b)} de taza de azúcar. Si haces <b>la mitad</b> de la receta, ¿cuánta azúcar necesitas?`, type: 'frac', ans: [a, 2 * b], hint: 'La mitad de algo es multiplicarlo por 1/2.', explain: X([`"La mitad de" es multiplicar por ${vf(1, 2)}.`, ...sMult(a, b, 1, 2, 'de taza')]) }; },
+    () => { const [a, b] = pick([[3, 4], [2, 3], [1, 2], [2, 5], [1, 3]]); return { text: `Una receta lleva ${FRAC(a, b)} de taza de leche. Si haces <b>el doble</b> de la receta, ¿cuánta leche necesitas?`, type: 'frac', ans: [2 * a, b], hint: 'El doble es multiplicar por 2.', explain: X([`"El doble" es multiplicar por 2.`, ...sWholeTimes(2, a, b, 'tazas')]) }; },
+    () => { let d1, d2, a, b; do { [d1, d2] = pick([[3, 6], [2, 4], [4, 8], [5, 10], [2, 3], [3, 4]]); a = R(1, d1 - 1); b = R(1, d2 - 1); } while (a * d2 === b * d1); const [n1, n2] = two(), { m, A, B } = sumHet(a, d1, b, d2); return { text: `${n1} comió ${FRAC(a, d1)} de una torta y ${n2} comió ${FRAC(b, d2)} de otra torta igual. ¿Quién comió más?`, type: 'mc', options: [n1, cap(n2)], answer: A > B ? 0 : 1, hint: 'Pasa las dos fracciones al mismo denominador y compara los numeradores.', explain: X([`Para comparar, pon las dos fracciones con el mismo denominador.`, sLcmLine(d1, d2), sConv(a, d1, m), sConv(b, d2, m), `Compara los numeradores: ${A} ${A > B ? '>' : '<'} ${B}. Comió más ${ANS(A > B ? n1 : cap(n2))}.`]) }; },
+    () => { const d = pick([4, 6, 8]), k = R(2, d - 1); return { text: `Hay ${FRAC(...simp(k, d))} de metro de cinta y se cortan trozos de ${FRAC(1, d)} de metro. ¿Cuántos trozos salen?`, type: 'num', ans: k, hint: '"¿Cuántos caben?" es una división.', explain: X([`"¿Cuántos trozos salen?" es <b>dividir</b>.`, ...sHowMany(k, d, 'trozos')]) }; },
+    () => { const [d1, d2] = hetPair(HET_EASY), a = R(1, d1 - 1), b = R(1, d2 - 1), { m, A, B } = sumHet(a, d1, b, d2), n = who(); return { text: `${n} recorrió ${FRAC(a, d1)} de km en la mañana y ${FRAC(b, d2)} de km en la tarde. ¿Cuánto recorrió en total?`, type: 'frac', ans: [A + B, m], hint: '"En total" es sumar.', explain: X([`"En total" es <b>sumar</b>.`, ...sHet(a, d1, b, d2, '+', 'km')]) }; },
+    () => { let d1, d2, a, b; do { [d1, d2] = pick([[3, 6], [2, 6], [4, 8], [2, 8], [5, 10], [3, 9]]); a = R(1, d1 - 1); b = R(1, d2 - 1); } while (a * d2 + b * d1 >= d1 * d2); const { m, A, B } = sumHet(a, d1, b, d2), n = who(); return { text: `${n} pintó ${FRAC(a, d1)} de una pared el lunes y ${FRAC(b, d2)} el martes. ¿Qué parte de la pared <b>falta</b> por pintar?`, type: 'frac', ans: [m - A - B, m], hint: 'Suma lo pintado y réstalo de la pared completa.', explain: X([`Son dos pasos: <b>sumar</b> lo pintado y <b>restar</b> de la pared completa.`, sLcmLine(d1, d2), sConv(a, d1, m), sConv(b, d2, m), `Pintado: ${vf(A, m)} + ${vf(B, m)} = ${vf(A + B, m)}.`, `La pared completa es ${vf(m, m)}. Falta: ${vf(m, m)} − ${vf(A + B, m)} = ${vf(m - A - B, m)}.`, ...sFinish(m - A - B, m)]) }; },
+    () => { const b = pick([3, 4, 5, 8]), a = R(1, b - 1); return { text: `Un tanque estaba lleno de agua y se usaron ${FRAC(a, b)} del tanque. ¿Qué fracción del tanque queda?`, type: 'frac', ans: [b - a, b], hint: `El tanque lleno es ${b}/${b}.`, explain: X([`"Queda" es <b>restar</b>. El tanque lleno es ${vf(b, b)}.`, ...sHomo(b, a, b, '-')]) }; },
+    () => { const b = pick([2, 4, 5]), a = b > 2 ? R(1, b - 1) : 1, N = b * 2000 * R(1, 5), n = who(); return { text: `${n} tenía <b>${money(N)}</b> y gastó ${FRAC(a, b)} en dulces. ¿Cuánto dinero le <b>quedó</b>?`, type: 'num', ans: N - N / b * a, hint: 'Calcula lo que gastó y réstalo de lo que tenía.', explain: X([`Primero halla lo que gastó: ${vf(a, b)} de ${money(N)}. ${money(N)} ÷ ${b} = ${money(N / b)}; × ${a} = ${money(N / b * a)}.`, `Luego resta: ${money(N)} − ${money(N / b * a)} = ${money(N - N / b * a)}.`, `Respuesta: ${ANS(money(N - N / b * a))}`]) }; },
+    () => { const b = pick([2, 3, 4, 5, 6]), a = b === 2 ? 1 : R(1, b - 1), n = who(); return { text: `${n} practicó piano ${FRAC(a, b)} de hora. ¿Cuántos minutos practicó?`, type: 'num', ans: 60 / b * a, hint: '1 hora = 60 minutos. Calcula la fracción de 60.', explain: X([`1 hora tiene 60 minutos: buscamos ${vf(a, b)} de 60.`, ...sFracOf(a, b, 60, 'minutos')]) }; },
+  ],
+  /* 8. Área y perímetro */
+  [
+    () => { const s = R(2, 5); return { text: `Papá John Fredy construyó una caja de arena cuadrada de ${s} m de lado para María Paz y sus primos. ¿Cuál es su área?`, viz: rectSVG(s, s, 'm', '#F3E6D8'), type: 'num', ans: s * s, hint: 'Área del cuadrado = lado × lado.', explain: X(sSqA(s, 'm')) }; },
+    () => { const L = R(4, 9), W = R(3, 6); return { text: `María Paz le hizo una tarjeta rectangular a su prima Salomé de ${L} cm por ${W} cm y le pegó cinta alrededor. ¿Cuántos cm de cinta usó?`, viz: rectSVG(L, W, 'cm', '#FCE4D6'), type: 'num', ans: 2 * (L + W), hint: '"Alrededor" es el perímetro.', explain: X([`"Alrededor" es el <b>perímetro</b>.`, ...sRectP(L, W, 'cm')]) }; },
+    () => { const L = R(5, 10), W = R(3, 6); return { text: `Mamá Laura tiene un jardín de ${L} m de largo y ${W} m de ancho. El tío Jorge va a sembrar pasto en todo el jardín. ¿Cuántos m² de pasto necesita?`, type: 'num', ans: L * W, hint: 'Cubrir todo el jardín es área.', explain: X([`Cubrir todo el jardín es <b>área</b>.`, ...sRectA(L, W, 'm')]) }; },
+    () => { const L = R(3, 5), W = R(3, 4); return { text: `Papá John Fredy y mamá Laura van a poner piso nuevo en el cuarto de María Paz, que mide ${L} m de largo y ${W} m de ancho. ¿Cuántos metros cuadrados de piso necesitan?`, viz: rectSVG(L, W, 'm', '#F3E6D8'), type: 'num', ans: L * W, hint: 'Cubrir el piso es área: largo × ancho.', explain: X([`Cubrir el piso es <b>área</b>.`, ...sRectA(L, W, 'm')]) }; },
+    () => { const L = R(6, 12), W = R(4, 8); return { text: `El tío Julián quiere poner luces de colores alrededor de la huerta de María Paz, que mide ${L} m de largo y ${W} m de ancho. ¿Cuántos metros de luces necesita?`, type: 'num', ans: 2 * (L + W), hint: '"Alrededor" es el perímetro.', explain: X([`"Alrededor" es el <b>perímetro</b>.`, ...sRectP(L, W, 'm')]) }; },
+    () => { const L = R(4, 12); let W = R(2, 7); if (W === L) W++; return { text: 'Halla el <b>área</b> del rectángulo (en cm²).', viz: rectSVG(L, W), type: 'num', ans: L * W, hint: 'Área del rectángulo = largo × ancho.', explain: X(sRectA(L, W, 'cm')) }; },
+    () => { const L = R(4, 12); let W = R(2, 7); if (W === L) W++; return { text: 'Halla el <b>perímetro</b> del rectángulo (en cm).', viz: rectSVG(L, W, 'cm', '#E2F0D9'), type: 'num', ans: 2 * (L + W), hint: 'Perímetro = suma de los 4 lados.', explain: X(sRectP(L, W, 'cm')) }; },
+    () => { const s = R(3, 10); return { text: `Un cuadrado mide <b>${s} cm</b> de lado. ¿Cuál es su perímetro?`, viz: rectSVG(s, s, 'cm', '#DEEAF6'), type: 'num', ans: 4 * s, hint: 'El cuadrado tiene 4 lados iguales.', explain: X(sSqP(s, 'cm')) }; },
+    () => { const s = R(3, 10); return { text: `Un cuadrado mide <b>${s} cm</b> de lado. ¿Cuál es su área?`, viz: rectSVG(s, s, 'cm', '#FFF2CC'), type: 'num', ans: s * s, hint: 'Área del cuadrado = lado × lado.', explain: X(sSqA(s, 'cm')) }; },
+    () => { const c = pick(SHAPES); return { text: 'Cada cuadrito mide 1 cm². ¿Cuál es el <b>área</b> de la figura azul?', viz: gridShapeSVG(c), type: 'num', ans: c.length, hint: 'Cuenta los cuadritos azules.', explain: X([`El área es cuántos cuadritos cubre la figura.`, `Cuenta los cuadritos azules, fila por fila: hay ${c.length}.`, `Cada uno mide 1 cm². Respuesta: ${ANS(c.length, 'cm²')}`]) }; },
+    () => { const c = pick(SHAPES), p = perimCells(c); return { text: 'Cada cuadrito mide 1 cm de lado. ¿Cuál es el <b>perímetro</b> de la figura azul?', viz: gridShapeSVG(c), type: 'num', ans: p, hint: 'Recorre el borde de la figura contando cada lado de cuadrito.', explain: X([`El perímetro es el borde de la figura.`, `Pon el dedo en una esquina y recorre todo el borde contando cada lado de cuadrito que toca el blanco (las rayas rojas del dibujo). No cuentes las rayas de adentro.`, `Al dar toda la vuelta se cuentan ${p} lados de 1 cm.`, `Respuesta: ${ANS(p, 'cm')}`], gridPerimSVG(c) + '<p class="note">Las rayas rojas son el borde: cada una mide 1 cm.</p>') }; },
+    () => { const L = R(6, 12), W = R(2, 5), P = 2 * (L + W); return { text: `Un jardín rectangular tiene perímetro de <b>${P} m</b> y su largo mide <b>${L} m</b>. ¿Cuánto mide el ancho?`, type: 'num', ans: W, hint: `Los dos largos suman ${2 * L} m. ¿Cuánto queda para los dos anchos?`, explain: X([`El perímetro es largo + ancho + largo + ancho = ${P}.`, `Los dos largos suman ${L} + ${L} = ${2 * L}.`, `Para los dos anchos quedan ${P} − ${2 * L} = ${2 * W}.`, `Cada ancho es la mitad: ${2 * W} ÷ 2 = ${W}.`, `Respuesta: ${ANS(W, 'm')}. Comprueba: ${L} + ${W} + ${L} + ${W} = ${P} ✔`]) }; },
+    () => { const L = R(4, 10), W = R(2, 6); return { text: `Un rectángulo tiene área de <b>${L * W} cm²</b> y su largo mide <b>${L} cm</b>. ¿Cuánto mide el ancho?`, type: 'num', ans: W, hint: `¿Qué número multiplicado por ${L} da ${L * W}?`, explain: X([`Área = largo × ancho, entonces ${L} × ? = ${L * W}.`, `Busca en la tabla del ${L}: ${L} × ${W} = ${L * W}. (También: ${L * W} ÷ ${L} = ${W}.)`, `Respuesta: ${ANS(W, 'cm')}`]) }; },
+    () => { const L = R(5, 9), W = R(2, 4), o = mcOpts(`${L * W} m²`, [`${L + W} m²`, `${2 * (L + W)} m²`, `${2 * L * W} m²`]); return { text: `Vas a poner tapete en un cuarto de ${L} m de largo y ${W} m de ancho. ¿Cuántos m² de tapete necesitas?`, type: 'mc', ...o, hint: 'Cubrir el piso es ÁREA: se multiplica.', explain: X([`Cubrir el piso es <b>área</b>, por eso la respuesta va en m².`, ...sRectA(L, W, 'm'), `Ojo: ${2 * (L + W)} sería el perímetro y ${L + W} es la trampa de sumar.`]) }; },
+    () => { const s = R(4, 9); return { text: `Un cuadrado tiene perímetro de <b>${4 * s} cm</b>. ¿Cuál es su <b>área</b>?`, type: 'num', ans: s * s, hint: `Primero halla el lado: ${4 * s} ÷ 4.`, explain: X([`El cuadrado tiene 4 lados iguales: cada lado mide ${4 * s} ÷ 4 = ${s} cm.`, `Ahora el área: lado × lado = ${s} × ${s} = ${s * s}.`, `Respuesta: ${ANS(s * s, 'cm²')}`]) }; },
+    () => { const W = R(6, 10), H = R(5, 9), w = R(2, W - 3), h = R(2, H - 3); return { text: 'Este es el plano de un patio. ¿Cuál es su <b>perímetro</b>?', viz: LSVG(W, H, w, h), type: 'num', ans: 2 * (W + H), hint: 'Suma los 6 lados de la figura.', explain: X([`El perímetro es la suma de <b>todos</b> los lados. Esta figura tiene 6 lados.`, `Recorre el borde: ${W} + ${H - h} + ${w} + ${h} + ${W - w} + ${H}.`, `Suma: ${2 * (W + H)}.`, `Respuesta: ${ANS(2 * (W + H), 'm')}`]) }; },
+    () => { const W = R(6, 10), H = R(5, 9), w = R(2, W - 3), h = R(2, H - 3), A = W * H - w * h; return { text: 'Este es el plano de un patio. ¿Cuál es su <b>área</b>? (Pista: pártelo en dos rectángulos.)', viz: LSVG(W, H, w, h), type: 'num', ans: A, hint: `Un rectángulo de ${W - w} × ${H} y otro de ${w} × ${H - h}.`, explain: X([`Parte la figura en dos rectángulos con una línea imaginaria.`, `Rectángulo alto: ${W - w} × ${H} = ${(W - w) * H}.`, `Rectángulo bajito: ${w} × ${H - h} = ${w * (H - h)}.`, `Suma las dos áreas: ${(W - w) * H} + ${w * (H - h)} = ${A}.`, `Respuesta: ${ANS(A, 'm²')}`]) }; },
+    () => { const [a, b, c] = shuffle([4, 5, 6, 7, 8, 9]).slice(0, 3); return { text: 'Halla el <b>perímetro</b> del triángulo.', viz: triSVG(a, b, c), type: 'num', ans: a + b + c, hint: 'Suma los tres lados.', explain: X([`El triángulo tiene 3 lados: el perímetro es su suma.`, `${a} + ${b} + ${c} = ${a + b + c}.`, `Respuesta: ${ANS(a + b + c, 'cm')}`]) }; },
+    () => { const [n, nm] = pick([[5, 'pentágono'], [6, 'hexágono'], [8, 'octágono'], [3, 'triángulo equilátero']]), s = R(3, 9); return { text: `Un <b>${nm}</b> regular tiene todos sus lados de ${s} cm. ¿Cuál es su perímetro?`, viz: polySVG(n, s), type: 'num', ans: n * s, hint: `Tiene ${n} lados iguales.`, explain: X([`Un ${nm} tiene ${n} lados, y como es regular todos miden ${s} cm.`, `En vez de sumar ${n} veces, multiplica: ${n} × ${s} = ${n * s}.`, `Respuesta: ${ANS(n * s, 'cm')}`]) }; },
+    () => { const L1 = R(3, 8), W1 = R(2, 6); let L2, W2; if (Math.random() < .25) { L2 = W1 * (L1 % 2 ? 1 : 2); W2 = L1 * W1 / L2; } else { do { L2 = R(3, 8); W2 = R(2, 6); } while (L2 * W2 === L1 * W1); } const A1 = L1 * W1, A2 = L2 * W2, ans = A1 > A2 ? 0 : A1 < A2 ? 1 : 2; return { text: `El rectángulo A mide ${L1} cm × ${W1} cm y el rectángulo B mide ${L2} cm × ${W2} cm. ¿Cuál tiene <b>mayor área</b>?`, type: 'mc', options: ['El rectángulo A', 'El rectángulo B', 'Tienen igual área'], answer: ans, hint: 'Calcula el área de cada uno (largo × ancho).', explain: X([`Área de A: ${L1} × ${W1} = ${A1} cm².`, `Área de B: ${L2} × ${W2} = ${A2} cm².`, `Compara: ${A1} ${A1 > A2 ? '>' : A1 < A2 ? '<' : '='} ${A2}. ${ANS(['A tiene mayor área', 'B tiene mayor área', 'tienen igual área'][ans])}.`]) }; },
+    () => { const L = R(3, 8), W = R(2, 6); return { text: `Un piso mide ${L} m de largo y ${W} m de ancho. Se cubre con baldosas de 1 m². ¿Cuántas baldosas se necesitan?`, viz: rectSVG(L, W, 'm', '#F3E6D8'), type: 'num', ans: L * W, hint: 'Cubrir el piso es área.', explain: X([`Cada baldosa cubre 1 m², así que hay tantas baldosas como m² tenga el piso.`, `Caben ${W} filas de ${L} baldosas: ${L} × ${W} = ${L * W}.`, `Respuesta: ${ANS(L * W, 'baldosas')}`]) }; },
+    () => { const L = R(5, 15), W = R(3, 9); return { text: `Se quiere poner una cerca alrededor de un jardín de ${L} m de largo y ${W} m de ancho. ¿Cuántos metros de cerca se necesitan?`, type: 'num', ans: 2 * (L + W), hint: '"Alrededor" es el perímetro.', explain: X([`"Alrededor" es el <b>perímetro</b>.`, ...sRectP(L, W, 'm')]) }; },
+    () => { const s = R(3, 12); return { text: 'La figura es un cubo. Se quiere poner cinta alrededor del borde de una de sus caras. ¿Cuál es el perímetro de esa cara?', viz: cubeSVG(s), type: 'num', ans: 4 * s, hint: 'La cara de un cubo es un cuadrado.', explain: X([`Cada cara de un cubo es un <b>cuadrado</b> de ${s} cm de lado.`, ...sSqP(s, 'cm')]) }; },
+  ],
+];
+
+/* ====== ejemplos resueltos paso a paso (pestaña Aprende) ====== */
+const WORKED = [
+  [
+    { label: 'Impropia → número mixto', make: () => { const d = pick([3, 4, 5, 6]), n = d * R(1, 3) + R(1, d - 1); return { prob: `Convierte ${vf(n, d)} en número mixto.`, steps: sToMixed(n, d), viz: vToMixed(n, d) }; } },
+    { label: 'Número mixto → impropia', make: () => { const e = R(1, 3), d = pick([3, 4, 5, 6]), n = R(1, d - 1); return { prob: `Convierte <span class="vmix">${e}&nbsp;${vf(n, d)}</span> en fracción impropia.`, steps: sToImproper(e, n, d), viz: barSVG(e * d + n, d, { w: 240 }) }; } },
+    { label: 'Clasificar', make: () => { const t = R(0, 2); let n, d; if (t === 0) { d = R(3, 9); n = R(1, d - 1); } else if (t === 1) { d = R(2, 6); n = R(d + 1, 2 * d + 2); } else { d = R(2, 9); n = d; } return { prob: `¿${vf(n, d)} es propia, impropia o igual a la unidad?`, steps: sClassify(n, d, t), viz: n <= d ? pieSVG(n, d, 120) : barSVG(n, d, { w: 240 }) }; } },
+    { label: 'Simplificar', make: () => { const [a, b] = pick([[1, 2], [2, 3], [3, 4], [2, 5], [3, 5]]), m = R(2, 4); return { prob: `Simplifica ${vf(a * m, b * m)}.`, steps: sSimplify(a * m, b * m) }; } },
+  ],
+  [
+    { label: 'MCM de dos números', make: () => { const [a, b] = pick(MCMP); return { prob: `Halla el MCM de ${a} y ${b}.`, steps: sMCM(a, b) }; } },
+    { label: 'Problema de MCM', make: () => { const [a, b] = pick([[10, 15], [6, 8], [4, 6], [8, 12]]); return { prob: `Un bus sale cada ${a} minutos y otro cada ${b}. Si salen juntos, ¿en cuántos minutos vuelven a salir juntos?`, steps: [`"Vuelven a coincidir" es buscar el MCM.`, ...sMCM(a, b, 'minutos')] }; } },
+  ],
+  [
+    { label: 'Suma', make: () => { const d = R(5, 9), a = R(1, d - 1), b = R(1, d - 1); return { prob: `${vf(a, d)} + ${vf(b, d)}`, steps: sHomo(a, b, d, '+'), viz: barSVG(a + b, d, { second: [a, b], w: 260 }) }; } },
+    { label: 'Resta', make: () => { const d = R(5, 9), a = R(3, d - 1), b = R(1, a - 1); return { prob: `${vf(a, d)} − ${vf(b, d)}`, steps: sHomo(a, b, d, '-'), viz: barSVG(a, d, { cross: [a - b, b], w: 260 }) }; } },
+    { label: '1 entero − fracción', make: () => { const d = R(3, 8), a = R(1, d - 1); return { prob: `1 − ${vf(a, d)}`, steps: [`Un entero partido en ${d} es ${vf(d, d)}.`, ...sHomo(d, a, d, '-')], viz: barSVG(d, d, { cross: [d - a, a], color: C.sky, w: 260 }) }; } },
+  ],
+  [
+    { label: 'Suma', make: () => { const [d1, d2] = hetPair(), a = R(1, d1 - 1), b = R(1, d2 - 1); return { prob: `${vf(a, d1)} + ${vf(b, d2)}`, steps: sHet(a, d1, b, d2, '+') }; } },
+    { label: 'Resta', make: () => { let d1, d2, a, b; do { [d1, d2] = hetPair(); a = R(1, d1 - 1); b = R(1, d2 - 1); } while (a * d2 <= b * d1); return { prob: `${vf(a, d1)} − ${vf(b, d2)}`, steps: sHet(a, d1, b, d2, '-') }; } },
+    { label: 'Entero − fracción', make: () => { const W = R(1, 3), b = pick([3, 4, 5, 8]), a = R(1, b - 1); return { prob: `${W} − ${vf(a, b)}`, steps: sWholeMinus(W, a, b) }; } },
+  ],
+  [
+    { label: 'Fracción × fracción', make: () => { const a = R(1, 4), b = R(2, 6), c = R(1, 4), d = R(2, 5); return { prob: `${vf(a, b)} × ${vf(c, d)}`, steps: sMult(a, b, c, d), viz: a < b && c < d ? modelSVG(a, b, c, d) : '' }; } },
+    { label: 'Fracción de un número', make: () => { const d = pick([3, 4, 5]), n = R(1, d - 1), N = d * R(3, 8); return { prob: `¿Cuánto es ${vf(n, d)} de ${N}?`, steps: sFracOf(n, d, N) }; } },
+    { label: 'Entero × fracción', make: () => { const W = R(2, 5), b = R(3, 6), a = R(1, b - 1); return { prob: `${W} × ${vf(a, b)}`, steps: sWholeTimes(W, a, b) }; } },
+  ],
+  [
+    { label: 'Fracción ÷ fracción', make: () => { const a = R(1, 4), b = R(2, 6), c = R(1, 3), d = R(2, 5); return { prob: `${vf(a, b)} ÷ ${vf(c, d)}`, steps: sDiv(a, b, c, d) }; } },
+    { label: 'Entero ÷ fracción', make: () => { const W = R(2, 4), d = pick([2, 3, 4]); return { prob: `${W} ÷ ${vf(1, d)}`, steps: sWholeDivUnit(W, d), viz: barSVG(W * d, d, { w: 240, color: C.cheese }) }; } },
+    { label: 'Fracción ÷ entero', make: () => { const b = R(2, 5), a = R(1, b - 1) || 1, W = R(2, 4); return { prob: `${vf(a, b)} ÷ ${W}`, steps: sFracDivWhole(a, b, W) }; } },
+  ],
+  [
+    { label: 'Problema de suma y resta', make: () => { let d1, d2, a, b; do { [d1, d2] = pick([[3, 6], [4, 8], [2, 8], [2, 6]]); a = R(1, d1 - 1); b = R(1, d2 - 1); } while (a * d2 + b * d1 >= d1 * d2); const { m, A, B } = sumHet(a, d1, b, d2); return { prob: `María Paz leyó ${vf(a, d1)} de un libro el sábado y ${vf(b, d2)} el domingo. ¿Qué parte le falta por leer?`, steps: [`<b>Leo</b> y saco los datos: sábado ${vf(a, d1)}, domingo ${vf(b, d2)}. Me preguntan lo que <b>falta</b>.`, `<b>Pienso</b>: primero sumo lo que leyó y luego lo resto del libro completo (1 entero).`, sLcmLine(d1, d2), `Sumo: ${vf(A, m)} + ${vf(B, m)} = ${vf(A + B, m)}.`, `Resto del libro completo: ${vf(m, m)} − ${vf(A + B, m)} = ${vf(m - A - B, m)}.`, ...sFinish(m - A - B, m)] }; } },
+    { label: 'Problema de fracción de un número', make: () => { const d = pick([3, 4, 5]), n = R(1, d - 1), N = d * R(4, 7); return { prob: `En el salón hay ${N} estudiantes y ${vf(n, d)} juegan fútbol. ¿Cuántos <b>no</b> juegan fútbol?`, steps: [`<b>Leo</b> y saco los datos: total ${N}, juegan ${vf(n, d)}. Me preguntan los que <b>no</b> juegan.`, `<b>Pienso</b>: primero hallo cuántos juegan (fracción de un número) y luego resto.`, `${vf(n, d)} de ${N}: ${N} ÷ ${d} = ${N / d}; × ${n} = ${N / d * n} juegan.`, `No juegan: ${N} − ${N / d * n} = ${N - N / d * n}.`, `<b>Reviso</b>: ${N / d * n} + ${N - N / d * n} = ${N} ✔. Respuesta: ${ANS(N - N / d * n, 'estudiantes')}`] }; } },
+  ],
+  [
+    { label: 'Área y perímetro del rectángulo', make: () => { const L = R(4, 9), W = R(2, 5); return { prob: `Un rectángulo mide ${L} cm de largo y ${W} cm de ancho. Halla su perímetro y su área.`, steps: [...sRectP(L, W, 'cm'), ...sRectA(L, W, 'cm'), `No las confundas: el perímetro se <b>suma</b> (cm) y el área se <b>multiplica</b> (cm²).`], viz: rectSVG(L, W) }; } },
+    { label: 'Figura en L', make: () => { const W = R(6, 9), H = R(5, 8), w = R(2, W - 3), h = R(2, H - 3), A = W * H - w * h; return { prob: 'Halla el área de esta figura.', steps: [`Parte la figura en dos rectángulos.`, `Rectángulo alto: ${W - w} × ${H} = ${(W - w) * H}.`, `Rectángulo bajito: ${w} × ${H - h} = ${w * (H - h)}.`, `Suma: ${(W - w) * H} + ${w * (H - h)} = ${A}. Respuesta: ${ANS(A, 'm²')}`], viz: LSVG(W, H, w, h) }; } },
+    { label: 'Lado desde el perímetro', make: () => { const s = R(3, 9); return { prob: `Un cuadrado tiene perímetro de ${4 * s} cm. ¿Cuánto mide su lado y cuál es su área?`, steps: [`El cuadrado tiene 4 lados iguales: lado = ${4 * s} ÷ 4 = ${s} cm.`, ...sSqA(s, 'cm')] }; } },
+  ],
+];
+
+/* ====== estaciones ====== */
+const ST = [
+  { name: 'Clases de fracciones', blurb: 'Propias, impropias, mixtas y equivalentes.', col: C.tomato,
+    rule: '<b>Propia</b>: arriba menor que abajo, es menos de 1 entero (3/5). <b>Impropia</b>: arriba mayor que abajo, es más de 1 entero (7/4). <b>Igual a la unidad</b>: arriba igual que abajo (6/6 = 1).<br><b>De impropia a número mixto</b>: divide arriba ÷ abajo. El resultado es el entero, lo que sobra va arriba y el de abajo no cambia. 7/4 → 7 ÷ 4 = 1 y sobran 3 → 1 3/4.<br><b>De mixto a impropia</b>: entero × abajo + arriba. 1 3/4 → 1 × 4 + 3 = 7 → 7/4.' },
+  { name: 'Mínimo Común Múltiplo', blurb: 'La rana y el conejo saltan hasta coincidir.', col: C.sky,
+    rule: 'Los <b>múltiplos</b> de un número son su tabla de multiplicar: múltiplos de 4 → 4, 8, 12, 16… El <b>MCM</b> (Mínimo Común Múltiplo) es el número <b>más pequeño</b> que está en las dos tablas. MCM(4, 6): 4, 8, <b>12</b>… y 6, <b>12</b>… → 12.' },
+  { name: 'Suma y resta homogéneas', blurb: 'Fracciones con el mismo denominador.', col: C.basil,
+    rule: 'Si las fracciones tienen el <b>mismo denominador</b>, las piezas son del mismo tamaño: se suman o restan <b>solo los de arriba</b> y el de abajo se queda igual. 2/7 + 3/7 = 5/7. ¡Nunca sumes los de abajo! Al final, simplifica si se puede y, si arriba quedó mayor que abajo, pásalo a número mixto.' },
+  { name: 'Suma y resta heterogéneas', blurb: 'Partimos en piezas iguales con el MCM.', col: '#8A5CD1',
+    rule: 'Con <b>distinto denominador</b> las piezas son de distinto tamaño. 1) Halla el <b>MCM</b> de los denominadores. 2) Convierte cada fracción: lo que multiplicas abajo, lo multiplicas arriba. 3) Suma o resta los de arriba. 4) Simplifica. Ejemplo: 1/2 + 1/4 → MCM 4 → 2/4 + 1/4 = 3/4.' },
+  { name: 'Multiplicación', blurb: 'Arriba por arriba, abajo por abajo.', col: '#E07A1F',
+    rule: 'Se multiplica <b>en línea recta</b>: arriba × arriba y abajo × abajo. 2/3 × 3/5 = 6/15 = 2/5. Si hay un entero, ponle un 1 abajo (3 = 3/1). <b>Fracción de un número</b>: 3/4 de 20 → 20 ÷ 4 = 5 y 5 × 3 = 15.' },
+  { name: 'División', blurb: 'Voltea la segunda y multiplica.', col: '#D6337A',
+    rule: 'Tres pasos: <b>deja</b> la primera, <b>cambia</b> ÷ por × y <b>voltea</b> la segunda. 3/4 ÷ 1/2 → 3/4 × 2/1 = 6/4 = 1 2/4 = 1 1/2. Dividir es preguntar <b>¿cuántas veces cabe?</b>: en 3/4 caben 1 y medio pedazos de 1/2.' },
+  { name: 'Problemas con fracciones', blurb: 'Descubre qué operación usar.', col: '#138A8A',
+    rule: '<b>Leo</b> dos veces y saco los datos. <b>Pienso</b> qué operación: juntar o "en total" → <b>suma</b>; quitar, "queda" o "falta" → <b>resta</b>; "3/4 de 20" o "la mitad de" → <b>multiplicación</b>; repartir o "¿cuántos caben?" → <b>división</b>. <b>Opero</b> y <b>reviso</b> que la respuesta tenga sentido y lleve su unidad.' },
+  { name: 'Área y perímetro', blurb: 'Pinta figuras y mide sus bordes.', col: C.ink,
+    rule: '<b>Perímetro</b> = el borde. Se <b>suman</b> todos los lados y se mide en cm o m. Rectángulo de 5 × 3: 5 + 3 + 5 + 3 = 16 cm.<br><b>Área</b> = lo que cubre la figura. En el rectángulo se <b>multiplica</b> largo × ancho y se mide en cm² o m². Rectángulo de 5 × 3: 5 × 3 = 15 cm².<br>Palabras clave: "alrededor", "cerca", "cinta en el borde" → perímetro. "Cubrir", "piso", "pintar toda la pared" → área.' },
+];
+let stars = store.get('stars', [0, 0, 0, 0, 0, 0, 0, 0]);
+const totalStars = () => stars.reduce((a, b) => a + b, 0);
+function updateStarCount() { $('#star-count').textContent = totalStars(); }
+
+/* ====== vistas ====== */
+const app = $('#app');
+function home() {
+  const t = totalStars();
+  const msg = t === 0 ? '¡Hola, María Paz! Soy Pizzi. Vamos a practicar fracciones juntas. Elige una estación para empezar.'
+    : t < 24 ? `¡Llevas ${t} estrellas, María Paz! Sigue así. Cada estación te da hasta 3 estrellas.` : '¡María Paz, ganaste todas las estrellas! Ahora intenta el Gran Examen.';
+  app.innerHTML = `
+    <section class="hero">${pizziSVG('pizzi', 'happy')}
+      <div class="bubble"><h1>¡A practicar, María Paz!</h1><p>${msg}</p></div>
+    </section>
+    <div class="sectitle"><h2>Mapa de estaciones</h2><span>En cada una: aprende jugando y luego practica 5 ejercicios.</span></div>
+    <div class="map">${ST.map((s, i) => `
+      <button class="station" data-i="${i}" style="--c:${s.col}">
+        <div class="row"><span class="num">${i + 1}</span>${starRow(stars[i])}</div>
+        <h3>${s.name}</h3><p>${s.blurb}</p><p style="font-weight:600;color:${s.col}">${GEN[i].length} tipos de ejercicio</p>
+      </button>`).join('')}</div>
+    <div class="exam-card"><div><h3>Gran Examen</h3><p>12, 20 o 30 preguntas al azar de los 8 temas, como en la evaluación del periodo. Cada examen es diferente.${store.get('examBest', 0) ? ` Mejor nota: ${store.get('examBest', 0).toFixed(1)}.` : ''}</p></div>
+      <button class="btn" id="exam-btn">Empezar examen</button></div>
+    <p class="foot">Banco de ${BANK_TOTAL} tipos de ejercicio con números al azar: cada práctica y cada examen salen diferentes.</p>`;
+  app.querySelectorAll('.station').forEach(b => b.onclick = () => { sfx.tap(); station(+b.dataset.i, 'learn'); });
+  $('#exam-btn').onclick = () => { sfx.tap(); exam(); };
+  scrollTo({ top: 0 });
+}
+$('#home-btn').onclick = home;
+
+function station(i, tab) {
+  const s = ST[i];
+  app.innerHTML = `
+    <button class="back" id="back">← Volver al mapa</button>
+    <div class="st-head">${pizziSVG('pizzi', 'happy').replace('class="pizzi"', 'class="pizzi" id="pz" style="width:70px"')}<div><span class="badge" style="background:${s.col}">Estación ${i + 1}</span><h2>${s.name}</h2></div></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="t-learn" aria-selected="${tab === 'learn'}">Aprende</button>
+      <button class="tab" role="tab" id="t-prac" aria-selected="${tab === 'prac'}">Practica ${starRow(stars[i], 3, 14)}</button>
+    </div>
+    <section class="panel" id="panel"></section>`;
+  $('#back').onclick = home;
+  $('#t-learn').onclick = () => station(i, 'learn');
+  $('#t-prac').onclick = () => station(i, 'prac');
+  const panel = $('#panel');
+  if (tab === 'learn') { panel.innerHTML = `<div class="rule">${s.rule}</div><div class="worked" id="worked"></div><h3 class="labtitle">Ahora juega y experimenta</h3><div class="lab" id="lab"></div><div class="actions"><button class="btn go" id="to-prac">¡Ya entendí, a practicar!</button></div>`; workedBox($('#worked'), i); LABS[i]($('#lab')); $('#to-prac').onclick = () => station(i, 'prac'); }
+  else practice(panel, i);
+  scrollTo({ top: 0 });
+}
+
+
+/* ====== ejemplo resuelto paso a paso ====== */
+function workedBox(box, i) {
+  const kinds = WORKED[i]; let kind = 0, ex = null, shown = 1;
+  function draw() {
+    box.innerHTML = `<div class="wk-head"><h3>Ejemplo resuelto, paso a paso</h3>
+      <div class="wk-kinds" role="group" aria-label="Tipo de ejemplo">${kinds.map((k, j) => `<button class="chipbtn" aria-pressed="${j === kind}" data-k="${j}">${k.label}</button>`).join('')}</div></div>
+      <p class="wk-prob">${ex.prob}</p>
+      <ol class="xsteps wk-steps">${ex.steps.filter(Boolean).map((st, j) => `<li ${j < shown ? '' : 'hidden'}><div>${st}</div></li>`).join('')}</ol>
+      ${ex.viz && shown >= ex.steps.filter(Boolean).length ? `<div class="xviz">${ex.viz}</div>` : ''}
+      <div class="actions">${shown < ex.steps.filter(Boolean).length ? `<button class="btn go" id="wk-next">Siguiente paso (${shown}/${ex.steps.filter(Boolean).length})</button><button class="btn alt" id="wk-all">Ver todos</button>` : `<span class="note">¡Listo! Así se resuelve.</span>`}<button class="btn alt" id="wk-new">Otro ejemplo</button></div>`;
+    box.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { kind = +b.dataset.k; fresh(); });
+    const nx = $('#wk-next', box); if (nx) nx.onclick = () => { shown++; sfx.tap(); draw(); const li = box.querySelectorAll('.wk-steps li')[shown - 1]; li && li.classList.add('pop'); };
+    const al = $('#wk-all', box); if (al) al.onclick = () => { shown = 99; draw(); };
+    $('#wk-new', box).onclick = () => { sfx.tap(); fresh(); };
+  }
+  function fresh() { ex = kinds[kind].make(); shown = 1; draw(); }
+  fresh();
+}
+
+/* ====== motor de preguntas ====== */
+function renderQuestion(box, q, onDone) {
+  let tries = 0;
+  const inputHTML = q.type === 'mc' ? `<div class="opts">${q.options.map((o, k) => `<button class="opt" data-k="${k}">${o}</button>`).join('')}</div>`
+    : q.type === 'num' ? `<div class="answer-row"><input class="numin" id="ans-num" inputmode="numeric" aria-label="Tu respuesta"><button class="btn go" id="check">Comprobar</button></div>`
+    : q.type === 'frac' ? `<div class="answer-row"><span class="frac"><input id="ans-n" inputmode="numeric" aria-label="Numerador"><hr><input id="ans-d" inputmode="numeric" aria-label="Denominador"></span><button class="btn go" id="check">Comprobar</button></div>`
+    : `<div class="answer-row"><input class="numin whole" id="ans-w" inputmode="numeric" aria-label="Entero"><span class="frac"><input id="ans-n" inputmode="numeric" aria-label="Numerador"><hr><input id="ans-d" inputmode="numeric" aria-label="Denominador"></span><button class="btn go" id="check">Comprobar</button></div>`;
+  box.innerHTML = `<p class="qtext">${q.text}</p>${q.viz ? `<div class="qviz viz">${q.viz}</div>` : ''}${inputHTML}<div class="fb" id="fb"></div><div class="actions" id="next-row" hidden><button class="btn" id="next">Siguiente →</button></div>`;
+  const fb = $('#fb', box), pz = document.getElementById('pz');
+  const val = id => { const e = $('#' + id, box); const v = e ? e.value.replace(/[.,$\s]/g, '') : ''; return v !== '' && /^-?\d+$/.test(v) ? Number(v) : NaN; };
+  function judge(given) {
+    let ok = false;
+    if (q.type === 'mc') ok = given === q.answer;
+    else if (q.type === 'num') { const v = val('ans-num'); if (isNaN(v)) return say('hint', 'Escribe un número', 'Pon tu respuesta en la casilla.'); ok = v === q.ans; }
+    else if (q.type === 'frac') { const n = val('ans-n'), d = val('ans-d'); if (isNaN(n) || isNaN(d) || d === 0) return say('hint', 'Completa la fracción', 'Escribe el número de arriba y el de abajo.'); ok = q.exact ? (n === q.ans[0] && d === q.ans[1]) : n * q.ans[1] === q.ans[0] * d; }
+    else { const w = val('ans-w') || 0, n = val('ans-n'), d = val('ans-d'); if (isNaN(n) || isNaN(d) || d === 0) return say('hint', 'Completa el número mixto', 'Escribe el entero y la fracción.'); ok = n < d && (w * d + n) * q.ans[1] === q.ans[0] * d; }
+    tries++;
+    if (ok) { sfx.ok(); pz && (pz.classList.remove('bounce'), void pz.offsetWidth, pz.classList.add('bounce')); say('ok', pick(['¡Excelente, María Paz!', '¡Muy bien!', '¡Genial!', '¡Eso es, María Paz!', '¡Lo lograste!', '¡Tus primos estarían orgullosos!', '¡Súper, María Paz!']), `<details><summary>Ver la explicación paso a paso</summary>${q.explain}</details>`); finish(true); }
+    else if (tries === 1) { sfx.bad(); pz && (pz.classList.remove('shake'), void pz.offsetWidth, pz.classList.add('shake')); say('hint', 'Casi… inténtalo otra vez', `<b>Pista:</b> ${q.hint}`); }
+    else { sfx.bad(); say('bad', 'No pasa nada. Mira cómo se hace, paso a paso:', q.explain); finish(false); }
+    return ok;
+  }
+  function say(kind, title, body) { fb.className = 'fb show ' + kind; fb.innerHTML = `<h4>${title}</h4><div>${body}</div>`; }
+  function finish(ok) {
+    box.querySelectorAll('input,.opt,#check').forEach(e => e.disabled = true);
+    if (q.type === 'mc') box.querySelectorAll('.opt')[q.answer].classList.add('sel-ok');
+    $('#next-row', box).hidden = false; $('#next', box).focus();
+    $('#next', box).onclick = () => onDone(ok && tries === 1, ok);
+  }
+  if (q.type === 'mc') box.querySelectorAll('.opt').forEach(b => b.onclick = () => { const k = +b.dataset.k; if (!judge(k)) b.classList.add('sel-bad'); });
+  else { $('#check', box).onclick = () => judge(); box.querySelectorAll('input').forEach(inp => inp.addEventListener('keydown', e => { if (e.key === 'Enter') judge(); })); box.querySelector('input').focus({ preventScroll: true }); }
+}
+
+/* ====== sorteo sin repetir dentro de una ronda ====== */
+function makeDraw() {
+  const bags = {}, seen = new Set();
+  return t => {
+    for (let tries = 0; tries < 12; tries++) {
+      if (!bags[t] || !bags[t].length) bags[t] = shuffle(GEN[t].flatMap((_, i) => FAMQ[t].has(i) ? [i, i] : [i]));
+      const q = GEN[t][bags[t].pop()]();
+      const key = q.text + (q.viz || '');
+      if (!seen.has(key)) { seen.add(key); return q; }
+    }
+    return pick(GEN[t])();
+  };
+}
+const FAM_RE = /María Paz|Martín|Jero|Salomé|Natalia|Bibiana|Jorge|Julián|Juan Pablo|Laura|John Fredy/;
+// ejercicios con historias de la familia: salen el doble de veces
+const FAMQ = GEN.map(g => new Set(g.map((f, i) => [0, 1, 2, 3, 4, 5].some(() => FAM_RE.test(f().text)) ? i : -1).filter(i => i >= 0)));
+const BANK_TOTAL = GEN.reduce((a, g) => a + g.length, 0);
+function chooser(title, sub, counts, def, onGo) {
+  return `<div class="result"><h3>${title}</h3><p class="note">${sub}</p>
+    <div class="actions" role="group" aria-label="Cantidad de ejercicios">${counts.map(n => `<button class="btn ${n === def ? '' : 'alt'}" data-n="${n}">${n} ejercicios</button>`).join('')}</div></div>`;
+}
+function stars3(good, N) { const p = good / N; return p >= .9 ? 3 : p >= .7 ? 2 : p >= .4 ? 1 : 0; }
+function reviewList(items) {
+  if (!items.length) return '';
+  return `<div class="review"><b>Revisa los que fallaste:</b>${items.map(({ q, k }) => `<div><b>${k + 1}.</b> ${q.text}<br><span class="note">${q.explain}</span></div>`).join('')}</div>`;
+}
+
+function practice(panel, i) {
+  panel.innerHTML = chooser('¿Cuántos ejercicios quieres hacer?', `Esta estación tiene <b>${GEN[i].length} tipos de ejercicio</b> con números al azar. Cada vez que practiques te saldrán ejercicios diferentes.`, [5, 10, 15, 20], 10);
+  panel.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { sfx.tap(); run(+b.dataset.n); });
+  function run(N) {
+    const draw = makeDraw(), qs = Array.from({ length: N }, () => draw(i)), res = [];
+    panel.innerHTML = `<div class="progress" id="prog">${'<i></i>'.repeat(N)}</div><p class="note" id="cnt"></p><div id="qbox"></div>`;
+    const prog = () => { [...$('#prog').children].forEach((el, k) => el.className = k < res.length ? (res[k] ? 'ok' : 'bad') : k === res.length ? 'now' : ''); $('#cnt').textContent = res.length < N ? `Ejercicio ${res.length + 1} de ${N}` : ''; };
+    const next = () => { prog(); if (res.length === N) return done(); renderQuestion($('#qbox'), qs[res.length], first => { res.push(first); next(); }); };
+    function done() {
+      const good = res.filter(Boolean).length, st = stars3(good, N);
+      const improved = st > stars[i]; if (improved) { stars[i] = st; store.set('stars', stars); updateStarCount(); }
+      if (st >= 2) { sfx.win(); confetti(); }
+      const msg = st === 3 ? '¡Perfecto, María Paz! Dominas este tema.' : st === 2 ? '¡Muy bien! Un poquito más y lo dominas.' : st === 1 ? 'Vas por buen camino. Repasa "Aprende" y vuelve a intentar.' : 'No te preocupes, practicar es como se aprende. Mira "Aprende" y vuelve a intentar.';
+      const wrong = qs.map((q, k) => ({ q, k })).filter(x => !res[x.k]);
+      $('#cnt').textContent = '';
+      $('#qbox').innerHTML = `<div class="result">${pizziSVG('pizzi bounce', 'happy')}<h3>${good} de ${N} a la primera</h3><div class="bigstars">${starRow(st, 3, 60)}</div><p>${msg}${improved ? ' ¡Nuevo récord de estrellas!' : ''}</p>
+        <div class="actions"><button class="btn go" id="again">Practicar con otros ejercicios</button>${i < 7 ? `<button class="btn alt" id="nexts">Siguiente estación →</button>` : ''}<button class="btn alt" id="tomap">Volver al mapa</button></div>${reviewList(wrong)}</div>`;
+      $('#again').onclick = () => station(i, 'prac'); $('#tomap').onclick = home; if (i < 7) $('#nexts').onclick = () => station(i + 1, 'learn');
+    }
+    next();
+  }
+}
+
+function exam() {
+  app.innerHTML = `<button class="back" id="back">← Salir del examen</button>
+    <div class="st-head">${pizziSVG('pizzi').replace('class="pizzi"', 'class="pizzi" id="pz" style="width:70px"')}<div><span class="badge" style="background:${C.tomato}">Gran Examen</span><h2>Todos los temas</h2></div></div>
+    <section class="panel" style="border-radius:18px" id="epanel"></section>`;
+  $('#back').onclick = home;
+  const ep = $('#epanel');
+  ep.innerHTML = chooser('¿De cuántas preguntas quieres el examen?', `Las preguntas salen al azar de un banco de <b>${BANK_TOTAL} tipos de ejercicio</b>, repartidas entre los 8 temas. Cada examen es diferente.`, [12, 20, 30], 20);
+  ep.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { sfx.tap(); run(+b.dataset.n); });
+  function run(N) {
+    // reparto equilibrado: cada tema aparece N/8 veces; el resto se reparte al azar sin repetir tema
+    const order = []; for (let k = 0; k < Math.floor(N / 8); k++) order.push(0, 1, 2, 3, 4, 5, 6, 7);
+    order.push(...shuffle([0, 1, 2, 3, 4, 5, 6, 7]).slice(0, N % 8));
+    const draw = makeDraw(), qs = shuffle(order).map(t => ({ t, q: draw(t) })), res = [];
+    ep.innerHTML = `<div class="progress" id="prog">${'<i></i>'.repeat(N)}</div><p class="note" id="cnt"></p><div id="qbox"></div>`;
+    const prog = () => { [...$('#prog').children].forEach((el, k) => el.className = k < res.length ? (res[k] ? 'ok' : 'bad') : k === res.length ? 'now' : ''); $('#cnt').textContent = res.length < N ? `Pregunta ${res.length + 1} de ${N} · Tema: ${ST[qs[res.length].t].name}` : ''; };
+    const next = () => { prog(); if (res.length === N) return done(); renderQuestion($('#qbox'), qs[res.length].q, first => { res.push(first); next(); }); };
+    function done() {
+      const good = res.filter(Boolean).length, grade = (good / N * 5).toFixed(1);
+      if (good / N >= .7) { sfx.win(); confetti(220); }
+      const byTopic = ST.map((s, t) => { const idx = qs.map((x, k) => k).filter(k => qs[k].t === t); return { t, n: idx.length, ok: idx.filter(k => res[k]).length }; });
+      const wrong = qs.map((x, k) => ({ q: x.q, k })).filter(x => !res[x.k]);
+      const best = store.get('examBest', 0); const newBest = Number(grade) > best; if (newBest) store.set('examBest', Number(grade));
+      $('#cnt').textContent = '';
+      $('#qbox').innerHTML = `<div class="result">${pizziSVG('pizzi bounce')}<h3>${good} de ${N} a la primera</h3>
+        <p class="big">Nota: ${grade} / 5.0</p>
+        <p>${good / N >= .85 ? '¡María Paz, estás lista para la evaluación! Cuéntales a mamá Laura y a papá John Fredy.' : good / N >= .6 ? '¡Vas muy bien! Repasa los temas en amarillo o rojo.' : 'Repasa los temas en rojo en sus estaciones y vuelve a intentarlo.'}${newBest ? ' ¡Es tu mejor nota!' : ''}</p>
+        <div class="review"><b>Resultado por tema:</b>${byTopic.map(({ t, n, ok }) => { const p = n ? ok / n : 1, col = p >= .8 ? C.basil : p >= .5 ? C.cheese : C.tomato; return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="badge" style="background:${col};color:${col === C.cheese ? C.ink : '#fff'}">${ok}/${n}</span><span style="flex:1;min-width:0">${t + 1}. ${ST[t].name}</span>${p < .8 ? `<button class="btn alt" style="padding:4px 12px;font-size:14px" data-t="${t}">Repasar</button>` : ''}</div>`; }).join('')}</div>
+        <div class="actions"><button class="btn go" id="again">Otro examen diferente</button><button class="btn alt" id="tomap">Volver al mapa</button></div>${reviewList(wrong)}</div>`;
+      $('#again').onclick = exam; $('#tomap').onclick = home;
+      $('#qbox').querySelectorAll('[data-t]').forEach(b => b.onclick = () => station(+b.dataset.t, 'learn'));
+    }
+    next(); scrollTo({ top: 0 });
+  }
+  scrollTo({ top: 0 });
+}
+
+/* ====== laboratorios "Aprende" ====== */
+const range = (id, label, min, max, v) => `<label class="ctrl" for="${id}">${label} <input type="range" id="${id}" min="${min}" max="${max}" value="${v}"></label>`;
+const sel = (id, label, opts, v) => `<label class="ctrl" for="${id}">${label} <select id="${id}">${opts.map(o => `<option value="${o}" ${o == v ? 'selected' : ''}>${o}</option>`).join('')}</select></label>`;
+const LABS = [
+  // 1 clases
+  lab => {
+    lab.innerHTML = `<p class="note">Mueve las barras para cambiar el numerador y el denominador. Mira cómo cambia la fracción.</p>
+      <div class="controls">${range('n1', 'Numerador (partes pintadas)', 0, 18, 3)}${range('d1', 'Denominador (partes del entero)', 1, 10, 4)}</div>
+      <div class="controls"><span class="big" id="f1"></span><span class="badge" id="b1"></span><span id="m1" class="note"></span></div>
+      <div class="controls"><div class="viz" id="v1"></div><div id="p1"></div></div>`;
+    const upd = () => { const n = +$('#n1').value, d = +$('#d1').value;
+      $('#f1').textContent = `${n}/${d}`;
+      const t = n < d ? ['Propia', C.basil] : n === d ? ['Igual a la unidad', C.sky] : ['Impropia', C.tomato];
+      $('#b1').textContent = t[0]; $('#b1').style.background = t[1];
+      $('#m1').innerHTML = n > d ? `Como número mixto: <b>${mixedS(n, d)}</b>` : n === d ? `${n}/${d} = 1 entero` : (gcd(n, d) > 1 && n ? `Es equivalente a <b>${FS(n, d)}</b>` : '');
+      $('#v1').innerHTML = barSVG(n, d, { w: 300 }); $('#p1').innerHTML = n <= d ? pieSVG(n, d, 130) : ''; };
+    lab.querySelectorAll('input').forEach(e => e.oninput = upd); upd();
+  },
+  // 2 MCM
+  lab => {
+    lab.innerHTML = `<p class="note">La rana roja salta de <b>a</b> en <b>a</b> y el conejo verde de <b>b</b> en <b>b</b>. ¿Dónde caen los dos por primera vez? ¡Ese es el MCM!</p>
+      <div class="controls">${sel('a2', 'Rana salta de', [2, 3, 4, 5, 6, 8], 4)}${sel('b2', 'Conejo salta de', [3, 4, 5, 6, 9, 10, 12], 6)}<button class="btn" id="go2">¡A saltar!</button></div>
+      <div class="viz" id="v2"></div><p class="big" id="r2" style="font-size:24px"></p><p class="note" id="l2"></p>`;
+    let timer = null;
+    const draw = (anim) => { clearTimeout(timer); const a = +$('#a2').value, b = +$('#b2').value, m = lcm(a, b), max = Math.max(m * 1.25, 24), s = 640 / max, H = 170, y = 95;
+      let svg = `<svg viewBox="-12 0 ${640 + 30} ${H}" width="${Math.max(640, 0)}" style="min-width:560px">`;
+      svg += `<line x1="0" y1="${y}" x2="640" y2="${y}" stroke="${C.ink}" stroke-width="3"/>`;
+      for (let i = 0; i <= max; i++) { const x = i * s; svg += `<line x1="${x}" y1="${y - 5}" x2="${x}" y2="${y + 5}" stroke="${C.ink}" stroke-width="${i % 5 ? 1.2 : 2.5}"/>`; if (i % (max > 40 ? 5 : 2) === 0) svg += `<text x="${x}" y="${y + 24}" text-anchor="middle" font-size="12" font-family="Lexend" fill="${C.soft}">${i}</text>`; }
+      const arcs = []; for (let i = 0; i + a <= max; i += a) arcs.push(`<path class="arc" d="M${i * s} ${y} Q${(i + a / 2) * s} ${y - 70 * Math.min(1, a / 6 + .3)} ${(i + a) * s} ${y}" fill="none" stroke="${C.tomato}" stroke-width="3"/>`);
+      const arcsB = []; for (let i = 0; i + b <= max; i += b) arcsB.push(`<path class="arc" d="M${i * s} ${y} Q${(i + b / 2) * s} ${y + 70 * Math.min(1, b / 8 + .3)} ${(i + b) * s} ${y}" fill="none" stroke="${C.basil}" stroke-width="3" stroke-dasharray="6 4"/>`);
+      svg += `<g id="arcsA">${arcs.join('')}</g><g id="arcsB">${arcsB.join('')}</g>`;
+      for (let k = m; k <= max; k += m) svg += `<circle cx="${k * s}" cy="${y}" r="${k === m ? 12 : 9}" fill="${C.cheese}" stroke="${C.ink}" stroke-width="2.5" class="hit" ${anim ? 'opacity="0"' : ''}/>`;
+      svg += `<text x="${m * s}" y="22" text-anchor="middle" font-family="Bagel Fat One, sans-serif" font-size="18" fill="${C.ink}" class="hit" ${anim ? 'opacity="0"' : ''}>MCM = ${m}</text></svg>`;
+      $('#v2').innerHTML = svg;
+      $('#l2').innerHTML = `Múltiplos de ${a}: ${multiples(a, m)}…<br>Múltiplos de ${b}: ${multiples(b, m)}…`;
+      $('#r2').textContent = anim ? '' : `MCM(${a}, ${b}) = ${m}`;
+      if (anim && !reduce) {
+        const all = [...$('#v2').querySelectorAll('.arc')]; all.forEach(p => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; });
+        let k = 0; const step = () => { if (k < all.length) { const p = all[k++]; p.style.transition = 'stroke-dashoffset .3s'; p.style.strokeDashoffset = 0; if (k % 2) sfx.tap(); timer = setTimeout(step, 180); } else { $('#v2').querySelectorAll('.hit').forEach(h => h.setAttribute('opacity', 1)); $('#r2').textContent = `¡Coinciden en ${m}! MCM(${a}, ${b}) = ${m}`; sfx.ok(); } };
+        step();
+      } else $('#v2').querySelectorAll('.hit').forEach(h => h.setAttribute('opacity', 1));
+    };
+    $('#go2').onclick = () => draw(true); $('#a2').onchange = () => draw(false); $('#b2').onchange = () => draw(false); draw(false);
+  },
+  // 3 homogéneas
+  lab => {
+    lab.innerHTML = `<p class="note">Con el mismo denominador, las piezas son del mismo tamaño. Solo hay que contarlas.</p>
+      <div class="controls">${range('d3', 'Denominador', 2, 12, 8)}${range('a3', 'Primera fracción', 1, 12, 3)}${range('b3', 'Segunda fracción', 1, 12, 2)}
+      <label class="ctrl" for="o3">Operación <select id="o3"><option value="+">Sumar (+)</option><option value="-">Restar (−)</option></select></label></div>
+      <p class="big" id="f3"></p><div class="viz" id="v3"></div><p class="note" id="e3"></p>`;
+    const upd = () => { const d = +$('#d3').value; $('#a3').max = d * 2 - 1; $('#b3').max = d * 2 - 1; let a = +$('#a3').value, b = +$('#b3').value; const op = $('#o3').value;
+      if (op === '-' && b > a) { b = a; $('#b3').value = a; }
+      if (op === '+') { $('#f3').textContent = `${a}/${d} + ${b}/${d} = ${a + b}/${d}`; $('#v3').innerHTML = barSVG(a + b, d, { second: [a, b] }); $('#e3').innerHTML = `Rojo (${a}) + amarillo (${b}) = <b>${a + b}</b> piezas de ${d}. El denominador sigue siendo ${d}.${a + b > d ? ` Como pasa del entero, es ${mixedS(a + b, d)}.` : ''}`; }
+      else { $('#f3').textContent = `${a}/${d} − ${b}/${d} = ${a - b}/${d}`; $('#v3').innerHTML = barSVG(a, d, { cross: [a - b, b] }); $('#e3').innerHTML = `Teníamos ${a} piezas, quitamos ${b} (las tachadas) y quedan <b>${a - b}</b>.`; } };
+    lab.querySelectorAll('input,select').forEach(e => e.oninput = upd); upd();
+  },
+  // 4 heterogéneas
+  lab => {
+    lab.innerHTML = `<p class="note">No se pueden sumar piezas de distinto tamaño. Primero hay que <b>partirlas en piezas iguales</b>, usando el MCM.</p>
+      <div class="controls">${sel('p4', 'Elige la suma', ['1/2 + 1/4', '1/3 + 1/6', '2/3 + 1/4', '1/2 + 3/8', '3/4 + 1/8', '1/2 + 1/3', '2/5 + 3/10'], '1/2 + 1/4')}<button class="btn" id="go4">Partir en piezas iguales</button></div>
+      <div class="viz" id="v4"></div><p class="big" id="f4" style="font-size:24px"></p><p class="note" id="e4"></p>`;
+    let split = false;
+    const upd = () => { const [[a, d1], [b, d2]] = $('#p4').value.split(' + ').map(x => x.split('/').map(Number)), m = lcm(d1, d2), A = a * m / d1, B = b * m / d2;
+      const da = split ? m : d1, db = split ? m : d2, na = split ? A : a, nb = split ? B : b;
+      $('#v4').innerHTML = `<div style="display:grid;gap:8px">${barSVG(na, da, { w: 320 })}${barSVG(nb, db, { w: 320, color: C.cheese })}</div>`;
+      $('#f4').textContent = split ? `${A}/${m} + ${B}/${m} = ${full(A + B, m)}` : `${a}/${d1} + ${b}/${d2} = ?`;
+      $('#e4').innerHTML = split ? `MCM(${d1}, ${d2}) = ${m}. Ahora todas las piezas son de 1/${m}: ${a}/${d1} = ${A}/${m} y ${b}/${d2} = ${B}/${m}.` : 'Las piezas rojas y amarillas tienen distinto tamaño. Toca el botón.';
+      $('#go4').textContent = split ? 'Volver a las piezas originales' : 'Partir en piezas iguales'; };
+    $('#go4').onclick = () => { split = !split; if (split) sfx.ok(); upd(); }; $('#p4').onchange = () => { split = false; upd(); }; upd();
+  },
+  // 5 multiplicación
+  lab => {
+    lab.innerHTML = `<p class="note">Multiplicar fracciones es buscar "una parte de otra parte". Las columnas azules muestran la primera fracción y las filas amarillas, la segunda. Donde se cruzan (verde) está el resultado.</p>
+      <div class="controls">${sel('a5', 'Primera', ['1/2', '2/3', '3/4', '1/3', '2/5', '3/5'], '2/3')}<span class="big">×</span>${sel('b5', 'Segunda', ['1/2', '3/4', '1/3', '2/5', '1/4', '3/5'], '3/4')}</div>
+      <div class="controls"><div class="viz" id="v5"></div><div><p class="big" id="f5"></p><p class="note" id="e5"></p></div></div>`;
+    const upd = () => { const [a, b] = $('#a5').value.split('/').map(Number), [c, d] = $('#b5').value.split('/').map(Number), S = 220;
+      let s = `<svg viewBox="-4 -4 ${S + 8} ${S + 8}" width="${S}">`;
+      for (let i = 0; i < b; i++) for (let j = 0; j < d; j++) { const inA = i < a, inB = j < c; const f = inA && inB ? C.basil : inA ? '#9CC3F0' : inB ? '#FFE08A' : C.card;
+        s += `<rect x="${i * S / b}" y="${j * S / d}" width="${S / b}" height="${S / d}" fill="${f}" stroke="${C.ink}" stroke-width="2"/>`; }
+      $('#v5').innerHTML = s + '</svg>';
+      $('#f5').textContent = `${a}/${b} × ${c}/${d} = ${a * c}/${b * d}`;
+      $('#e5').innerHTML = `El cuadro tiene ${b} × ${d} = <b>${b * d}</b> partes (denominador).<br>Las verdes son ${a} × ${c} = <b>${a * c}</b> (numerador).${FS(a * c, b * d) !== fs(a * c, b * d) ? `<br>Simplificada: <b>${FS(a * c, b * d)}</b>` : ''}`; };
+    lab.querySelectorAll('select').forEach(e => e.onchange = upd); upd();
+  },
+  // 6 división
+  lab => {
+    lab.innerHTML = `<p class="note">Dividir es preguntar: <b>¿cuántas veces cabe</b> la segunda fracción en la primera? El truco: voltear la segunda y multiplicar.</p>
+      <div class="controls">${sel('a6', 'Tengo', ['3/4', '1/2', '2/3', '5/6', '1', '3/2'], '3/4')}<span class="big">÷</span>${sel('b6', 'Piezas de', ['1/8', '1/4', '1/6', '1/3', '1/2', '3/8'], '1/8')}<button class="btn" id="go6">Voltear la tarjeta</button></div>
+      <div class="flip" id="fl6"></div><div class="viz" id="v6"></div><p class="note" id="e6"></p>`;
+    let flipped = false;
+    const parse = v => v.includes('/') ? v.split('/').map(Number) : [Number(v), 1];
+    const upd = () => { const [a, b] = parse($('#a6').value), [c, d] = parse($('#b6').value), n = a * d, m = b * c;
+      $('#fl6').innerHTML = `<span class="fcard">${a}/${b}</span><span>${flipped ? '×' : '÷'}</span><span class="fcard ${flipped ? 'flipped' : ''}">${flipped ? `${d}/${c}` : `${c}/${d}`}</span><span>=</span><span class="fcard" style="background:${flipped ? '#E3F6EC' : '#F6F9FF'}">${flipped ? full(n, m) : '?'}</span>`;
+      // medir: cuántas piezas c/d caben en a/b
+      const W = 420, total = a / b, piece = c / d, scale = W / Math.max(total, 1);
+      let s = `<svg viewBox="-4 -4 ${W + 8} 110" width="${W}"><rect x="0" y="0" width="${total * scale}" height="40" fill="${C.tomato}" stroke="${C.ink}" stroke-width="2.5"/><text x="4" y="27" font-family="Lexend" font-size="15" font-weight="700" fill="#fff">${a}/${b}</text>`;
+      let k = 0; for (let x = 0; x + 1e-9 < total; x += piece, k++) { const w = Math.min(piece, total - x) * scale, partial = total - x < piece - 1e-9;
+        s += `<rect x="${x * scale}" y="52" width="${w}" height="40" fill="${k % 2 ? C.cheese : '#FFE08A'}" stroke="${C.ink}" stroke-width="2" ${partial ? 'stroke-dasharray="5 4"' : ''}/>`;
+        if (w > 18) s += `<text x="${x * scale + w / 2}" y="78" text-anchor="middle" font-family="Lexend" font-size="14" font-weight="700" fill="${C.ink}">${k + 1}</text>`; }
+      $('#v6').innerHTML = s + '</svg>';
+      $('#e6').innerHTML = `Las piezas amarillas de ${c}/${d} caben <b>${mixedS(n, m)}</b> veces en ${a}/${b}.${flipped ? ` Con el truco: ${a}/${b} × ${d}/${c} = ${full(n, m)}.` : ' Toca el botón para ver el truco.'}`; };
+    $('#go6').onclick = () => { flipped = !flipped; sfx.tap(); upd(); }; lab.querySelectorAll('select').forEach(e => e.onchange = () => { flipped = false; upd(); }); upd();
+  },
+  // 7 problemas
+  lab => {
+    lab.innerHTML = `<p class="note">Las palabras del problema te dicen qué operación usar. Toca cada tarjeta para descubrirlo.</p>
+      <div class="keyword-grid">${[['"en total", "entre los dos", "juntos"', 'Suma ( + )'], ['"cuánto queda", "cuánto falta", "cuánto más"', 'Resta ( − )'], ['"3/4 de 20", "la mitad de"', 'Multiplicación ( × )'], ['"cuántas bolsas", "cuántos trozos", "repartir en"', 'División ( ÷ )']]
+        .map(([k, a]) => `<button class="kw"><b>${k}</b><span class="ans">→ ${a}</span><span class="note" style="display:block;margin-top:6px">Toca para ver</span></button>`).join('')}</div>
+      <h3 style="font-size:20px;margin-top:6px">Los 4 pasos de Pizzi</h3>
+      <ol class="steps"><li><span><b>Leo</b> el problema dos veces y subrayo los datos.</span></li><li><span><b>Dibujo</b> una barra o una pizza si me ayuda.</span></li><li><span><b>Opero</b>: elijo la operación y la resuelvo.</span></li><li><span><b>Reviso</b>: ¿mi respuesta tiene sentido? ¿Le puse la unidad (km, litros, cm)?</span></li></ol>`;
+    lab.querySelectorAll('.kw').forEach(b => b.onclick = () => { b.classList.add('open'); b.querySelector('.note').hidden = true; sfx.ok(); });
+  },
+  // 8 área y perímetro
+  lab => {
+    const COLS = 10, ROWS = 7, S = 34; let on = new Set(['2,2', '3,2', '4,2', '2,3', '3,3', '4,3']);
+    lab.innerHTML = `<p class="note">Toca los cuadritos para pintar una figura. Cada cuadrito mide 1 cm de lado. El borde rojo es el <b>perímetro</b>; los cuadritos azules son el <b>área</b>.</p>
+      <div class="controls"><div class="viz" id="v8"></div><div style="display:grid;gap:8px">
+        <div class="chip" style="font-size:18px">Área: <b id="ar8"></b>&nbsp;cm²</div><div class="chip" style="font-size:18px;border-color:${C.tomato}">Perímetro: <b id="pe8"></b>&nbsp;cm</div>
+        <button class="btn alt" id="clr8">Borrar</button><button class="btn alt" id="rect8">Rectángulo 4 × 3</button></div></div>
+      <p class="note" id="e8"></p>`;
+    const draw = () => { let s = `<svg viewBox="-3 -3 ${COLS * S + 6} ${ROWS * S + 6}" width="${COLS * S}" style="touch-action:manipulation">`;
+      for (let x = 0; x < COLS; x++) for (let y = 0; y < ROWS; y++) s += `<rect data-c="${x},${y}" x="${x * S}" y="${y * S}" width="${S}" height="${S}" fill="${on.has(x + ',' + y) ? '#7FB3E0' : C.card}" stroke="${C.line}" stroke-width="1" style="cursor:pointer"/>`;
+      const cells = [...on].map(c => c.split(',').map(Number));
+      cells.forEach(([x, y]) => [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { if (!on.has(`${x + dx},${y + dy}`)) { const x1 = dx === 1 ? x + 1 : x, y1 = dy === 1 ? y + 1 : y, x2 = dx ? x1 : x + 1, y2 = dy ? y1 : y + 1; s += `<line x1="${x1 * S}" y1="${y1 * S}" x2="${x2 * S}" y2="${y2 * S}" stroke="${C.tomato}" stroke-width="4" stroke-linecap="round" pointer-events="none"/>`; } }));
+      $('#v8').innerHTML = s + '</svg>';
+      $('#ar8').textContent = cells.length; $('#pe8').textContent = perimCells(cells);
+      const xs = cells.map(c => c[0]), ys = cells.map(c => c[1]); const w = cells.length ? Math.max(...xs) - Math.min(...xs) + 1 : 0, h = cells.length ? Math.max(...ys) - Math.min(...ys) + 1 : 0;
+      $('#e8').innerHTML = cells.length && w * h === cells.length ? `¡Es un rectángulo de ${w} × ${h}! Área = ${w} × ${h} = <b>${w * h} cm²</b>. Perímetro = ${w} + ${h} + ${w} + ${h} = <b>${2 * (w + h)} cm</b>.` : cells.length ? 'Cuenta los cuadritos para el área y los bordes rojos para el perímetro.' : 'Toca la cuadrícula para empezar.';
+      $('#v8').querySelectorAll('rect').forEach(r => r.onclick = () => { const c = r.dataset.c; on.has(c) ? on.delete(c) : on.add(c); sfx.tap(); draw(); }); };
+    $('#clr8').onclick = () => { on = new Set(); draw(); };
+    $('#rect8').onclick = () => { on = new Set(); for (let x = 1; x < 5; x++) for (let y = 1; y < 4; y++) on.add(x + ',' + y); draw(); };
+    draw();
+  },
+];
+
+updateStarCount();
+home();
+</script>
+
+</body>
+</html>
